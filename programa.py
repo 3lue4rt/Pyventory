@@ -8,50 +8,60 @@ try:
 except ImportError:
     raise ImportError("Se requiere el modulo tkinter")
 
+import types
+
 from template import *
 
-root = Tk()
-root.title("Pyventory")
-root.geometry("300x400")
+def rootInit() -> Tk:
+    root = Tk()
+    root.title("Pyventory")
+    root.geometry("1600x900")
+    return root
 
-entry = Entry(root, width=20, font=("Arial", 18), justify="right")
-entry.pack(pady=10)
+def createFrame(root: Tk) -> Frame:
+    frame = Frame(root, padx=10, pady=10)
+    frame.pack(fill="both")
+    return frame
 
-buttons_frame = Frame(root)
-buttons_frame.pack()
+def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
+    button = Button(frame, text=name, font=("Arial", 14), command= func)
+    button.pack(fill="both")
+    return button
 
-buttons = [
-    ('7', 1, 0), ('8', 1, 1), ('9', 1, 2),
-    ('4', 2, 0), ('5', 2, 1), ('6', 2, 2),
-    ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('0', 4, 1),
-    ('+', 1, 3), ('-', 2, 3), ('*', 3, 3), ('/', 4, 3),
-    ('C', 4, 0), ('=', 4, 2)
-]
+class Terminal:
+    def __init__(self, parent: Frame, initialText: str):
+        self.text=initialText
+        self.terminal = Label(parent, text=self.text, font=("Arial", 16), justify="left")
+        self.terminal.pack()
+        
+    def update(self):
+        self.terminal.config(text = self.text)
 
-def on_button_click(value):
+    def addLine(self, text: str):
+        self.text += "\n"+text
+        self.update()
+
+    def deleteText(self):
+        self.text = ""
+        self.update()
+
+class Menu:
+    def __init__(self, root):
+        self.frame1 = createFrame(root)
+        self.frame2 = createFrame(root)
+        
+        self.insertButton = createButton(self.frame1, "Insertar Computador", lambda : None)
+        self.editButton = createButton(self.frame1, "Editar Computador", lambda : None)
+        self.deleteButton = createButton(self.frame1, "Eliminar Computador", lambda : None)
+        self.searchButton = createButton(self.frame1, "Buscar Computador", lambda : None)
+
+        self.terminal = Terminal(self.frame2, "Hello")
+        
+
+
+    ### terminal
     
-    if value == "C":
-        entry.delete(0, END)
-
-    elif value == "=":
-        try:
-            result=str(eval(entry.get()))
-            entry.delete(0, END)
-            entry.insert(END, result)
-            
-        except Exception:
-            entry.delete(0, END)
-            entry.insert(END, "Error")
-    else:
-        entry.insert(END, value)
+    
     
 
-for (text, row, col) in buttons:
-    button = Button(buttons_frame, text=text, font=("Arial", 14), height=2, width=5,
-                       command=lambda t=text: on_button_click(t))
-    button.grid(row=row, column=col, padx=5, pady=5)
-
-
-if __name__=="__main__":
-    root.mainloop()
 
