@@ -3,18 +3,31 @@ import os
 
 filename = "data.txt"
 
-def csvINIT(mode: str) -> any | None:
+def csvINIT() -> None:
     # Check if the file exists
     file_exists = os.path.exists(filename)
 
-    with open(filename, mode=mode, newline="") as file:
+    with open(filename, mode="a+", newline="") as file:
         writer = csv.writer(file)
         
         # If the file is newly created, write a header
         if not file_exists:
             header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
-            writer.writerow(header) 
+            writer.writerow(header)
 
+def csvAPPEND() -> csv._writer:
+    with open(filename, mode="a", newline="") as file:
+        writer = csv.writer(file)
+    return writer
+
+def csvREADER() -> csv._reader:
+    with open(filename, mode="r", newline="") as file:
+        reader = csv.reader(file)
+    return reader
+
+def csvWRITER() ->csv._writer:
+    with open(filename, mode="w", newline="") as file:
+        writer = csv.writer(file)
     return writer
 
 class Dato:
@@ -32,15 +45,31 @@ class Dato:
     def exportList(self) -> list[str]:
         [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
-def insertarDato(dato: Dato):
-    writer = csvINIT("a+")
+def insertarDatoCSV(dato: Dato):
+    writer = csvWRITER()
     writer.writerow(dato.exportList())
 
-def buscarDatoCaracteristica(caracteristica: str | int, indice: int) -> list[str] | None :
-    reader = csvINIT("r")
+def buscarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> list[str] | None :
+    reader = csvREADER()
     for row in reader:
         if len(row)>1 and row[indice]==str(caracteristica):
             return row
         
-def eliminarDatoCaracteristica(caracteristica: str | int, indice: int):
-    pass
+def eliminarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> bool:
+    guardar: list[str] = []
+    encontrado = False
+    reader = csvREADER()
+    for row in reader:
+        if len(row)>1 and row[indice]==caracteristica:
+            encontrado = True
+        else:
+            guardar.append(row)
+
+    if encontrado:
+        writer = csvWRITER()
+        header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
+        writer.writerow(header)
+        writer.writerows(guardar)
+
+    return encontrado
+

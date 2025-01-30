@@ -11,6 +11,7 @@ except ImportError:
 import types
 
 from template import *
+from csvHandling import *
 
 #creates the Tkinter root
 def rootInit() -> Tk:
@@ -46,8 +47,8 @@ def createLabel(frame: Frame, text: str) -> Label:
 class Terminal:
     def __init__(self, parent: Frame, initialText: str):
         self.text=initialText
-        self.terminal = Label(parent, text=self.text, font=("Arial", 16), justify="left")
-        self.terminal.pack()
+        self.terminal = Label(parent, text=self.text, font=("Arial", 16), justify="left",anchor="sw")
+        self.terminal.pack(side="bottom", anchor="sw", fill="x", padx=10, pady=10)
         
     def update(self):
         self.terminal.config(text = self.text)
@@ -61,40 +62,41 @@ class Terminal:
         self.update()
 
 class App:
-    def __init__(self, root: Tk, workbook: Workbook):
+    def __init__(self, root: Tk):
         self.root = root
         self.frame1 = createFrame(self.root)
+        self.menu(self.frame1)
         self.frame2 = createFrame(self.root)
         self.terminal = Terminal(self.frame2, "Hello")
-        self.workbook = workbook
         
     #header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
 
-    def clear(self):
-        for widget in self.frame.winfo_children():
+    def clear(self, frame: Frame):
+        for widget in frame.winfo_children():
             widget.pack_forget()
             
-    def menu(self):
-        self.clear()
-        self.insertButton = createButton(self.frame1, "Ingresar Computador", lambda : self.insert1())
-        self.editButton = createButton(self.frame1, "Editar Computador", lambda : None)
-        self.deleteButton = createButton(self.frame1, "Eliminar Computador", lambda : None)
-        self.searchButton = createButton(self.frame1, "Buscar Computador", lambda : None)
+    def menu(self, frame: Frame):
+        self.clear(frame)
+        self.insertButton = createButton(frame, "Ingresar Computador", lambda : self.insert1(self.frame1))
+        self.editButton = createButton(frame, "Editar Computador", lambda : None)
+        self.deleteButton = createButton(frame, "Eliminar Computador", lambda : None)
+        self.searchButton = createButton(frame, "Buscar Computador", lambda : None)
 
-    def insert1(self):
-        self.clear()
+    def insert1(self, frame):
+        self.clear(frame)
         self.result=[]
-        self.label = createLabel(self.frame1, "Ingresar Número de Computador")
-        self.entry = createEntry(self.frame1)
-        self.cancelButton = createButton(self.frame1, "Cancelar y Volver", lambda: self.menu())
-        self.entry.bind("<return>", foo)
-        def foo():
-            if buscarDatoNumero(self.entry.get(), self.workbook):
+        self.label = createLabel(frame, "Ingresar Número de Computador")
+        self.entry = createEntry(frame)
+        self.cancelButton = createButton(frame, "Cancelar y Volver", lambda: self.menu(frame))
+        
+        def foo(x):
+            if buscarDatoCaracteristicaCSV(self.entry.get(),0):
                 self.label.config(text="Ese numero de PC ya fue ingresado")
-                self.insert1()
+                self.insert1(frame)
             else:
                 self.result.append(self.entry.get())
                 self.insert2()
+        self.entry.bind("<Return>", foo)
     
     def insert2(self):
         self.label.config(text="Ingrese Placa")
