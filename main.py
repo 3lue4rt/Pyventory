@@ -3,12 +3,8 @@ import csvHandling as hand
 
 #initialize
 root = pg.rootInit()
-
+hand.csvINIT()
 main = pg.App(root)
-create = hand.csvINIT("a+")
-
-
-
 
 if __name__=="__main__":
     # main loop
