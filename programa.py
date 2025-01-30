@@ -100,49 +100,49 @@ class App:
     
     def insert2(self):
         self.label.config(text="Ingrese Placa")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert3()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
 
     def insert3(self):
         self.label.config(text="Ingrese Partida")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert4()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
     
     def insert4(self):
         self.label.config(text="Ingrese Procesador")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert5()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
     
     def insert5(self):
         self.label.config(text="Ingrese RAM")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert6()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
 
     def insert6(self):
         self.label.config(text="Ingrese SSD")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert7()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
 
     def insert7(self):
         self.label.config(text="Ingrese Ubicación")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
             self.insert8()
-        self.entry.bind("<return>", lambda: next)
+        self.entry.bind("<Return>", next)
 
     def insert8(self):
         self.label.config(text="Ingrese Monitor")
-        def next():
+        def next(x):
             self.result.append(self.entry.get())
-            self.menu()
-        self.entry.bind("<return>", lambda: next)
+            self.menu(self.frame1)
+        self.entry.bind("<Return>", next)
