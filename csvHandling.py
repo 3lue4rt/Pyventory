@@ -15,17 +15,17 @@ def csvINIT() -> None:
             header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
             writer.writerow(header)
 
-def csvAPPEND() -> csv._writer:
+def csvAPPEND():
     with open(filename, mode="a", newline="") as file:
         writer = csv.writer(file)
     return writer
 
-def csvREADER() -> csv._reader:
+def csvREADER():
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
     return reader
 
-def csvWRITER() ->csv._writer:
+def csvWRITER():
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
     return writer
