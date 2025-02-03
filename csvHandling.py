@@ -48,7 +48,7 @@ filename = "data.txt"
 
 header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
 
-def csvINIT() -> None:
+def csvINIT() -> bool:
     # Check if the file exists
     file_exists = os.path.exists(filename)
 
@@ -61,7 +61,14 @@ def csvINIT() -> None:
 
     return file_exists
 
-class Dato:
+def csvValidate() -> bool:
+    with open(filename, mode="r", newline="") as file:
+        reader = csv.reader(file)
+        first = next(reader, None)  # Read the first row (header)
+
+        return first==header
+
+class csvData:
     def __init__(self, numero_pc, fecha, partida, placa, procesador, ram, ssd, ubicacion, monitor):
         self.numero_pc = numero_pc
         self.fecha = fecha
@@ -76,7 +83,7 @@ class Dato:
     def exportList(self) -> list[str]:
         [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
-def insertarDatoCSV(dato: Dato):
+def insertarDatoCSV(dato: csvData):
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(dato.exportList())
