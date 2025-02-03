@@ -35,7 +35,7 @@ Interface for csvHandling:
     of tuples that were equal
 
     def csvEdit(oldData: Data, newData: Data) => bool:
-    Given old Data and new Data, it searches for the old data in the csv and replaces it
+    Given old Data and new Data, it searches for the first tuple that matches the old data in the csv and replaces it
     with the new data returning True, otherwise return False
 
     def csvEditTrait(oldData: Data, newTrait: str | int, index: int) => bool:
@@ -117,3 +117,22 @@ def csvRemove(data: csvData) -> int:
 
     return encontrado
 
+def csvEdit(oldData: csvData, newData: csvData) -> bool:
+    guardar: list[str] = []
+    encontrado = False
+    with open(filename, mode="r", newline="") as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if row==oldData.exportList() and not encontrado:
+                guardar.append(newData)
+                encontrado = True
+            else:
+                guardar.append(row)
+
+    if encontrado:
+        with open(filename, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(header)
+            writer.writerows(guardar)
+
+    return encontrado
