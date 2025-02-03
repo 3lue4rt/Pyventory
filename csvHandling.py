@@ -83,10 +83,10 @@ class csvData:
     def exportList(self) -> list[str]:
         [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
-def insertarDatoCSV(dato: csvData):
+def csvInsert(data: csvData):
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(dato.exportList())
+        writer.writerow(data.exportList())
 
 def buscarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> list[str] | None :
     with open(filename, mode="r", newline="") as file:
