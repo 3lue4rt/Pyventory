@@ -30,8 +30,9 @@ Interface for csvHandling:
     Given a trait and it's index in the header, it searches for data in the csv document 
     and returns the list of data that contain that trait
 
-    def csvRemove(data: Data) => bool:
-    Given data, its searches for it and removes it returning True, otherwise False.
+    def csvRemove(data: Data) => int:
+    Given data, its searches for all tuples equal to the data and removes them returning the number
+    of tuples that were equal
 
     def csvEdit(oldData: Data, newData: Data) => bool:
     Given old Data and new Data, it searches for the old data in the csv and replaces it
@@ -84,7 +85,7 @@ class csvData:
         [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
 def csvInsert(data: csvData):
-    with open(filename, mode="w", newline="") as file:
+    with open(filename, mode="+a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(data.exportList())
 
@@ -97,21 +98,20 @@ def csvSearchBy(trait: str | int, index: int) -> list[csvData] | None :
                 result.append(row)
         return result
         
-def eliminarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> bool:
+def csvRemove(data: csvData) -> int:
     guardar: list[str] = []
-    encontrado = False
+    encontrado = 0
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
         for row in reader:
-            if len(row)>1 and row[indice]==caracteristica:
-                encontrado = True
+            if row==data.exportList():
+                encontrado+=1
             else:
                 guardar.append(row)
 
     if encontrado:
         with open(filename, mode="w", newline="") as file:
             writer = csv.writer(file)
-            header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
             writer.writerow(header)
             writer.writerows(guardar)
 
