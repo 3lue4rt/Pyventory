@@ -46,6 +46,8 @@ Interface for csvHandling:
 
 filename = "data.txt"
 
+header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
+
 def csvINIT() -> None:
     # Check if the file exists
     file_exists = os.path.exists(filename)
@@ -55,8 +57,9 @@ def csvINIT() -> None:
         
         # If the file is newly created, write a header
         if not file_exists:
-            header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
             writer.writerow(header)
+
+    return file_exists
 
 class Dato:
     def __init__(self, numero_pc, fecha, partida, placa, procesador, ram, ssd, ubicacion, monitor):
