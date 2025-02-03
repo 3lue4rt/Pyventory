@@ -136,3 +136,21 @@ def csvEdit(oldData: csvData, newData: csvData) -> bool:
             writer.writerows(guardar)
 
     return encontrado
+
+def csvEditTrait(oldData: csvData, newTrait: str | int, index: int) -> bool:
+    traitList=oldData.exportList()
+    traitList[index]=str(newTrait)
+
+    newData= csvData(traitList[0], 
+                     traitList[1], 
+                     traitList[2], 
+                     traitList[3], 
+                     traitList[4], 
+                     traitList[5], 
+                     traitList[6], 
+                     traitList[7], 
+                     traitList[8])
+    
+    result = csvEdit(oldData, newData)
+
+    return result
