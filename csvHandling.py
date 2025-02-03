@@ -26,7 +26,7 @@ Interface for csvHandling:
     def csvInsert(dato: Dato) => None: 
     Inserts the data in the csv
 
-    def csvSearchBy(trait: str | int, index: int) => list[str] | None :
+    def csvSearchBy(trait: str | int, index: int) => list[csvData] | None :
     Given a trait and it's index in the header, it searches for data in the csv document 
     and returns the list of data that contain that trait
 
@@ -88,12 +88,14 @@ def csvInsert(data: csvData):
         writer = csv.writer(file)
         writer.writerow(data.exportList())
 
-def buscarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> list[str] | None :
+def csvSearchBy(trait: str | int, index: int) -> list[csvData] | None :
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
+        result = []
         for row in reader:
-            if len(row)>1 and row[indice]==str(caracteristica):
-                return row
+            if len(row)>1 and row[index]==str(trait):
+                result.append(row)
+        return result
         
 def eliminarDatoCaracteristicaCSV(caracteristica: str | int, indice: int) -> bool:
     guardar: list[str] = []
