@@ -1,6 +1,49 @@
 import csv
 import os
 
+'''
+Interface for csvHandling:
+
+    filename: str
+    The name of the file to work with. defaults to 'data.txt'
+
+    header: list[str]
+    List of columns for the csv. 
+    Defaults to ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
+
+    def csvInit() => Bool: 
+    Initializes the csv document, if it doesn't exist it creates the 
+    document with the template it returns False, otherwise returns True.
+
+    def csvValidation() => Bool:
+    Returns True if the csv doc has the correct template, otherwise return False
+
+    class csvData(numero_pc, fecha, partida, placa, procesador, ram, ssd, ubicacion, monitor): 
+    Represents a tuple in the csv, it's composed of traits
+        def exportList() => list[str]:
+        exports the data as a list of traits
+
+    def csvInsert(dato: Dato) => None: 
+    Inserts the data in the csv
+
+    def csvSearchBy(trait: str | int, index: int) => list[str] | None :
+    Given a trait and it's index in the header, it searches for data in the csv document 
+    and returns the list of data that contain that trait
+
+    def csvRemove(data: Data) => bool:
+    Given data, its searches for it and removes it returning True, otherwise False.
+
+    def csvEdit(oldData: Data, newData: Data) => bool:
+    Given old Data and new Data, it searches for the old data in the csv and replaces it
+    with the new data returning True, otherwise return False
+
+    def csvEditTrait(oldData: Data, newTrait: str | int, index: int) => bool:
+    Given old Data, a new trait and it's index for the header, it searches for the old Data
+    if found it replaces ONLY the old trait in the index for the new trait returning True, 
+    otherwise returns False.
+
+'''
+
 filename = "data.txt"
 
 def csvINIT() -> None:

@@ -1,6 +1,8 @@
 import programa as pg
 import csvHandling as hand
 
+
+
 #initialize
 root = pg.rootInit()
 hand.csvINIT()
