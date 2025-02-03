@@ -1,1 +1,0 @@
-Número PC,Fecha,Partida,Placa,Procesador,RAM,SSD,Ubicación,Monitor
