@@ -26,8 +26,19 @@ def expCheck(name: str) -> bool:
     splitted = name.split(".")
     return os.path.exists(splitted[0])
 
-def expSave(Workbook: Workbook, name: str) -> bool:
+def expSave(workbook: Workbook, name: str) -> bool:
     WINDOWS_FILENAME_REGEX = re.compile(r'^(?!^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$)'  # Disallow reserved names
                                         r'[^<>:"/\\|?*\x00-\x1F]+'  # Ensure no invalid characters
                                         r'(?:\.xlsx)?$' ) # Allow only .xlsx extension or no extension at all
-    return bool(WINDOWS_FILENAME_REGEX.match(name)) and len(name) <= 255
+    if not bool(WINDOWS_FILENAME_REGEX.match(name)) or len(name) <= 255:
+        return 0
+
+    result = 2 if name.endswith(".xlsx") else 1
+
+    if result==1:
+        workbook.save(name+".xlsx")
+    elif result==2:
+        workbook.save(name)
+    
+    return result>0
+
