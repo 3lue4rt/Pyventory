@@ -11,110 +11,8 @@ except ImportError:
 import types
 from exportxls import *
 from csvHandling import *
+import datetime
 
-'''
-interface for tkinter pyventory gui: programa
-it uses the csvHandling file for data storing in a csv
-and the exportxls file for exporting data in a xlsx file (excel)
-
-
-
-    
-'''
-'''
-#creates the Tkinter root
-def rootInit() -> Tk:
-    root = Tk()
-    root.title("Pyventory")
-    root.geometry("800x450")
-    return root
-
-#creates a Frame given a Tkinter root
-def createFrame(root: Tk) -> Frame:
-    frame = Frame(root, padx=10, pady=10)
-    frame.pack(fill="both")
-    return frame
-
-#creates a Button given a frame, name and function
-def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
-    button = Button(frame, text=name, font=("Arial", 14), command= func)
-    button.pack(fill="both")
-    return button
-
-#creates an Entry given a frame
-def createEntry(frame: Frame) -> Entry:
-    entry = Entry(frame, width=30)
-    entry.pack()
-    return entry
-
-#creates a label given a frame and text
-def createLabel(frame: Frame, text: str) -> Label:
-    label = Label(frame, text=text, font=("Arial", 16), justify="left")
-    label.pack()
-    return label
-
-class Terminal:
-    def __init__(self, parent: Frame, initialText: str):
-        self.text=initialText
-        self.terminal = Label(parent, text=self.text, font=("Arial", 16), justify="left",anchor="sw")
-        self.terminal.pack(side="bottom", anchor="sw", fill="x", padx=10, pady=10)
-        
-    def update(self):
-        self.terminal.config(text = self.text)
-
-    def addLine(self, text: str):
-        self.text += "\n"+text
-        self.update()
-
-    def deleteText(self):
-        self.text = ""
-        self.update()
-
-class App:
-    def __init__(self, root: Tk):
-        self.root = root
-        self.frame1 = createFrame(self.root)
-        self.menu(self.frame1)
-        self.frame2 = createFrame(self.root)
-        self.terminal = Terminal(self.frame2, "Hello")
-        
-    #header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
-
-    def clear(self, frame: Frame):
-        for widget in frame.winfo_children():
-            widget.pack_forget()
-            
-    def menu(self, frame: Frame):
-        self.clear(frame)
-        self.insertButton = createButton(frame, "Ingresar Computador", lambda : self.insert1(self.frame1))
-        self.editButton = createButton(frame, "Editar Computador", lambda : None)
-        self.deleteButton = createButton(frame, "Eliminar Computador", lambda : None)
-        self.searchButton = createButton(frame, "Buscar Computador", lambda : None)
-
-    def insert1(self, frame):
-        self.clear(frame)
-        self.result=[]
-        self.label = createLabel(frame, "Ingresar Número de Computador")
-        self.entry = createEntry(frame)
-        self.cancelButton = createButton(frame, "Cancelar y Volver", lambda: self.menu(frame))
-        
-        def foo(x):
-            if buscarDatoCaracteristicaCSV(self.entry.get(),0):
-                self.label.config(text="Ese numero de PC ya fue ingresado")
-                self.insert1(frame)
-            else:
-                self.result.append(self.entry.get())
-                self.insert2()
-        self.entry.bind("<Return>", foo)
-    
-    def insert2(self):
-        self.label.config(text="Ingrese Placa")
-        def next(x):
-            self.result.append(self.entry.get())
-            self.insert3()
-        self.entry.bind("<Return>", next)
-
-'''
 #creates a Button given a frame, name and function
 def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
     button = Button(frame, text=name, font=("Arial", 14), command= func)
@@ -125,6 +23,12 @@ def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
 def clear(frame: Frame):
     for widget in frame.winfo_children():
         widget.pack_forget()
+
+#turns the list of traits to data
+def listToData(traitList: list[str]) -> csvData:
+    return csvData(traitList[0], traitList[1], traitList[2], traitList[3],
+                   traitList[4], traitList[5], traitList[6], traitList[7],
+                   traitList[8])
 
 #App class for initializing the application
 class App:
@@ -139,14 +43,27 @@ class App:
         self.mainFrame.pack(fill="both")
 
         #Creates the Main Menu in the respective Frame
-        self.mainMenu = MainMenu(self.mainFrame)
+        self.mainMenu = MainMenu(self)
 
         #Creates the Frame for the terminal
         self.terminalFrame = Frame(self.root, padx=10, pady=10)
         self.terminalFrame.pack(fill="both")
 
         #Creates the Terminal in the respective Frame
-        self.terminal = Terminal(self.terminalFrame)
+        self.terminal = Terminal(self)
+
+        #Starts the csv Importer and checks if the file exists, if not creates one
+        fileExists = csvINIT()
+        if not fileExists:
+            self.terminal.addLine("No se encontró ningun archivo data, se ha creado uno nuevo")
+        isValid = csvValidate()
+        if not isValid:
+            self.terminal.addLine("El archivo no tiene el formato correcto... guarde los datos a mano y borre el archivo para restaurar")
+
+    #imports data to the csv
+    def csvImport(self, data: csvData):
+        csvInsert(data)
+        self.terminal.addLine(f"Se ha agregado exitosamente el computador ${data.exportList()[0]} a ${filename}")
 
     #Method for starting the app
     def run(self) -> None:
@@ -154,9 +71,9 @@ class App:
 
 #Terminal class, requires a parent Frame to sit on, displays text
 class Terminal:
-    def __init__(self, parentFrame: Frame):
+    def __init__(self, parentApp: App):
         #Parent Frame
-        self.parent = parentFrame
+        self.parent = parentApp.terminalFrame
 
         #Initial text
         self.text = "=> Pyventory, BlueArt 2025"
@@ -164,6 +81,7 @@ class Terminal:
         #Creates the Label for displaying text
         self.mainLabel = Label(self.parent, text=self.text, font=("Arial", 16), justify="left",anchor="sw")
         self.mainLabel.pack(side="bottom", anchor="sw", fill="x", padx=10, pady=10)
+        self.mainLabel.bind('<Configure>', lambda e: self.mainLabel.config(wraplength=self.mainLabel.winfo_width()))
 
     #Updates the text in the Label with the self.text string
     def update(self):
@@ -172,7 +90,7 @@ class Terminal:
     #Adds a line of text to the bottom of the Label
     # NEEDS TESTING FOR OVERFLOW
     def addLine(self, text: str):
-        self.text += "\n=>"+text
+        self.text += "\n=> "+text
         self.update()
 
     #Deletes all text in Label
@@ -182,11 +100,67 @@ class Terminal:
 
 #Main Menu class, requires a parent Frame to sit on, buttons for other menus
 class MainMenu:
-    def __init__(self, parentFrame: Frame):
+    def __init__(self, parentApp: App):
+        self.parentApp = parentApp
         #Parent
-        self.parent = parentFrame
+        self.parent = parentApp.mainFrame
         clear(self.parent)
-        self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : None)
+        self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(parentApp))
         self.editButton = createButton(self.parent, "Editar Computador", lambda : None)
-        self.deleteButton = createButton(self.parent, "Eliminar Computador", lambda : None)
-        self.searchButton = createButton(self.parent, "Buscar Computador", lambda : None)
+
+# Insert menu class, requires a parent Frame to sit on, adds new computer to csv
+class InsertMenu:
+    def __init__(self, parentApp: App):
+        self.parentApp = parentApp
+        #Parent 
+        self.parent = parentApp.mainFrame
+        clear(self.parent)
+
+        #Data trait list
+        self.result = []
+
+        #Header helps order text in label
+        self.header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
+        self.header = list("Ingrese: "+text for text in self.header)
+
+        #Index helps other methods access the header and result without calling it directly
+        self.index=0
+
+        #Menu structure
+        self.label = Label(self.parent, text=self.header[self.index], font=("Arial", 16))
+        self.label.pack()
+        
+        #Entry for traits from the User, make() method dictates the input structure
+        self.entry = Entry(self.parent, width=30)
+        self.entry.pack()
+        self.entry.bind("<Return>", self.make)
+
+        self.cancelButton = createButton(self.parent, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+
+    def make(self, dummyParameterForEntryBind=None):
+        #Automatically enters actual date
+        if self.index==1:
+            self.result.append(datetime.datetime.now())
+            self.entry.delete(0,100)
+            self.index += 1
+            self.make()
+
+        #Handles no entry by the user
+        if not self.entry.get():
+            self.parentApp.terminal.addLine("No se puede ingresar nada, ingrese algo")
+            return
+        
+        #Ends insert
+        elif self.index>8:
+            self.parentApp.csvImport(listToData(self.result))
+            MainMenu(self.parentApp)
+
+        #General case
+        elif self.index != 1:
+            self.label.config(text=self.header[self.index])
+            self.result.append(self.entry.get())
+            self.entry.delete(0,100)
+            self.index += 1
+
+        
+        
