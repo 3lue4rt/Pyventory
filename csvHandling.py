@@ -44,12 +44,13 @@ class csvData:
         self.monitor = monitor
 
     def exportList(self) -> list[str]:
-        [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
+        return [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
 #Inserts the data in the csv
 def csvInsert(data: csvData):
     with open(filename, mode="+a", newline="") as file:
         writer = csv.writer(file)
+        print(data.exportList())
         writer.writerow(data.exportList())
 
 #Given a trait and it's index in the header, it searches for data in the csv document 
@@ -79,7 +80,6 @@ def csvRemove(data: csvData) -> int:
     if encontrado:
         with open(filename, mode="w", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow(header)
             writer.writerows(guardar)
 
     return encontrado

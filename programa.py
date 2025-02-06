@@ -27,8 +27,7 @@ def clear(frame: Frame):
 #turns the list of traits to data
 def listToData(traitList: list[str]) -> csvData:
     return csvData(traitList[0], traitList[1], traitList[2], traitList[3],
-                   traitList[4], traitList[5], traitList[6], traitList[7],
-                   traitList[8])
+                   traitList[4], traitList[5], traitList[6], traitList[7], traitList[8])
 
 #App class for initializing the application
 class App:
@@ -63,7 +62,7 @@ class App:
     #imports data to the csv
     def csvImport(self, data: csvData):
         csvInsert(data)
-        self.terminal.addLine(f"Se ha agregado exitosamente el computador ${data.exportList()[0]} a ${filename}")
+        self.terminal.addLine(f"Se ha agregado exitosamente el computador {data.exportList()[0]} a {filename}")
 
     #Method for starting the app
     def run(self) -> None:
@@ -131,36 +130,42 @@ class InsertMenu:
         self.label.pack()
         
         #Entry for traits from the User, make() method dictates the input structure
-        self.entry = Entry(self.parent, width=30)
+        self.entry = Entry(self.parent, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<Return>", self.make)
 
         self.cancelButton = createButton(self.parent, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
 
     def make(self, dummyParameterForEntryBind=None):
-        #Automatically enters actual date
-        if self.index==1:
-            self.result.append(datetime.datetime.now())
-            self.entry.delete(0,100)
+        #Automatically enters actual date if nothing is entered
+        if self.index==1 and self.entry.get()=="":
+            self.result.append(str(datetime.datetime.now()))
             self.index += 1
-            self.make()
+            self.label.config(text=self.header[self.index])
 
         #Handles no entry by the user
-        if not self.entry.get():
+        elif self.entry.get()=="":
             self.parentApp.terminal.addLine("No se puede ingresar nada, ingrese algo")
-            return
-        
-        #Ends insert
-        elif self.index>8:
-            self.parentApp.csvImport(listToData(self.result))
-            MainMenu(self.parentApp)
 
         #General case
-        elif self.index != 1:
-            self.label.config(text=self.header[self.index])
+        else:
             self.result.append(self.entry.get())
             self.entry.delete(0,100)
             self.index += 1
+            if self.index<=8:
+                self.label.config(text=self.header[self.index])
+            #sets up the question for automatic date
+            if self.index==1:
+                self.label.config(text=self.header[self.index] + " (Si quiere ingresar la fecha actual no ingrese nada)")
+
+        self.parentApp.terminal.addLine(f"se ha ingresado hasta ahora: {self.result}")
+
+        #Ends insert
+        if self.index>8:
+            self.parentApp.csvImport(listToData(self.result))
+            MainMenu(self.parentApp)
+            
+    
 
         
         
