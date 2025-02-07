@@ -53,14 +53,14 @@ def csvInsert(data: csvData):
         print(data.exportList())
         writer.writerow(data.exportList())
 
-#Given a trait and it's index in the header, it searches for data in the csv document 
-#and returns the list of data that contain that trait
+#Given a substring of a trait and it's index in the header, it searches for data in the csv document 
+#and returns the list of data that contain the substring in the trait
 def csvSearchBy(trait: str | int, index: int) -> list[csvData] | None :
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
         result = []
         for row in reader:
-            if len(row)>1 and row[index]==str(trait):
+            if len(row)>1 and str(trait) in row[index]:
                 result.append(row)
         return result
 
