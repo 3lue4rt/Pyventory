@@ -50,7 +50,6 @@ class csvData:
 def csvInsert(data: csvData):
     with open(filename, mode="+a", newline="") as file:
         writer = csv.writer(file)
-        print(data.exportList())
         writer.writerow(data.exportList())
 
 #Given a substring of a trait and it's index in the header, it searches for data in the csv document 
