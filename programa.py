@@ -168,7 +168,8 @@ class InsertMenu:
         if self.index>8:
             self.parentApp.csvImport(listToData(self.result))
             self.cancelCommand()
-            
+
+# Edit menu, requiers parent frame to sit on, starts the search for a PC
 class EditMenu:
     def __init__(self, parentApp: App):
         #parent Stuff
