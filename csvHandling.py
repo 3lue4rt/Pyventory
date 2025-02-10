@@ -46,6 +46,11 @@ class csvData:
     def exportList(self) -> list[str]:
         return [self.numero_pc, self.fecha, self.partida, self.placa, self.procesador, self.ram, self.ssd, self.ubicacion, self.monitor]
 
+#turns the list of traits to data
+def listToData(traitList: list[str]) -> csvData:
+    return csvData(traitList[0], traitList[1], traitList[2], traitList[3],
+                   traitList[4], traitList[5], traitList[6], traitList[7], traitList[8])
+
 #Inserts the data in the csv
 def csvInsert(data: csvData):
     with open(filename, mode="+a", newline="") as file:
@@ -54,13 +59,13 @@ def csvInsert(data: csvData):
 
 #Given a substring of a trait and it's index in the header, it searches for data in the csv document 
 #and returns the list of data that contain the substring in the trait
-def csvSearchBy(trait: str | int, index: int) -> list[csvData] | None :
+def csvSearchBy(trait: str | int, index: int) -> list[csvData] | list[None] :
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
-        result = []
+        result: list[csvData] = []
         for row in reader:
             if len(row)>1 and str(trait) in row[index]:
-                result.append(row)
+                result.append(listToData(row))
         return result
 
 #Given data, its searches for all tuples equal to the data and removes them returning the number
