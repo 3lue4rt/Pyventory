@@ -24,11 +24,6 @@ def clear(frame: Frame):
     for widget in frame.winfo_children():
         widget.pack_forget()
 
-#turns the list of traits to data
-def listToData(traitList: list[str]) -> csvData:
-    return csvData(traitList[0], traitList[1], traitList[2], traitList[3],
-                   traitList[4], traitList[5], traitList[6], traitList[7], traitList[8])
-
 #App class for initializing the application
 class App:
     def __init__(self):
@@ -64,6 +59,10 @@ class App:
         csvInsert(data)
         self.terminal.addLine(f"Se ha agregado exitosamente el computador {data.exportList()[0]} a {filename}")
 
+    #returns a list of data given a substring of a trait
+    def csvSearch(self, trait: str, index: int) -> list[csvData]:
+        return csvSearchBy(trait, index)
+    
     #Method for starting the app
     def run(self) -> None:
         self.root.mainloop()
@@ -104,8 +103,8 @@ class MainMenu:
         #Parent
         self.parent = parentApp.mainFrame
         clear(self.parent)
-        self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(parentApp))
-        self.editButton = createButton(self.parent, "Editar Computador", lambda : None)
+        self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
+        self.editButton = createButton(self.parent, "Editar Computador", lambda : EditMenu(self.parentApp))
 
 # Insert menu class, requires a parent Frame to sit on, adds new computer to csv
 class InsertMenu:
@@ -134,7 +133,12 @@ class InsertMenu:
         self.entry.pack()
         self.entry.bind("<Return>", self.make)
 
-        self.cancelButton = createButton(self.parent, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+        self.cancelButton = createButton(self.parent, "Cancelar y Volver", self.cancelCommand)
+
+    #function for cancelButton for going back to the menu
+    def cancelCommand(self, dummyParameterForEntryBind=None):
+        self.entry.unbind("<Return>")
+        MainMenu(self.parentApp)
 
     def make(self, dummyParameterForEntryBind=None):
         #Automatically enters actual date if nothing is entered
@@ -150,7 +154,7 @@ class InsertMenu:
         #General case
         else:
             self.result.append(self.entry.get())
-            self.entry.delete(0,100)
+            self.entry.delete(0,END)
             self.index += 1
             if self.index<=8:
                 self.label.config(text=self.header[self.index])
@@ -163,9 +167,63 @@ class InsertMenu:
         #Ends insert
         if self.index>8:
             self.parentApp.csvImport(listToData(self.result))
-            MainMenu(self.parentApp)
+            self.cancelCommand()
             
-    
+class EditMenu:
+    def __init__(self, parentApp: App):
+        #parent Stuff
+        self.parentApp = parentApp
+        self.parent = parentApp.mainFrame
+        clear(self.parent)
+        
+        #Actual selected data
+        self.selected: csvData | None = None
 
-        
-        
+        #Menu Title
+        self.label = Label(self.parent, font=("Arial", 16), text= "Ingrese el número de PC")
+
+        #Entry with dropdown list*
+        self.entry = Entry(self.parent, width=30, font=("Arial", 16))
+        self.entry.pack()
+        self.entry.bind("<KeyRelease>", self.update_list)  # Detect typing
+
+        self.entry.bind("<Return>", self.getEntry)
+
+        self.listbox = Listbox(self.parent, width=30, height=5,font=("Arial", 16))
+        self.listbox.bind("<ButtonRelease-1>", self.select_item)
+        self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
+
+        self.cancelButton = createButton(self.parent, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+
+    # gets the entry and sets the selected value to a csv
+    # if no match, selected is None.
+    def getEntry(self, dummyParameterForEntryBind=None):
+        resultList = self.parentApp.csvSearch(self.entry.get(), 0)
+        self.selected = resultList[0] if not resultList == [] else None # First result if not empty
+        if not self.selected is None:
+            self.parentApp.terminal.addLine(f"Se ha seleccionado el PC-{self.selected.numero_pc}")
+        else:
+            self.parentApp.terminal.addLine("No se ha encontrado ningun PC con ese número")
+
+    #Updates the listbox
+    #IT ONLY SEARCHES BY PC NUMBER (INDEX 0), REST, TO IMPLEMENT
+    def update_list(self, dummyParameterForEntryBind=None):
+        self.listbox.delete(0, END)  # Clear previous items
+
+        if self.entry.get()!="":  # Show matching items
+            filtered = self.parentApp.csvSearch(self.entry.get(), 0)
+            if not filtered == []:
+                for item in filtered:
+                    self.listbox.insert(END, item.numero_pc)
+
+                # Position the Listbox below the Entry widget
+                self.listbox.pack(after=self.entry)
+            else:
+                self.listbox.place_forget()  # Hide if no match
+
+    def select_item(self, dummyParameterForEntryBind=None):
+        selected = self.listbox.get(ACTIVE)  # Get the selected item
+        self.entry.delete(0, END)
+        self.entry.insert(0, selected)
+        self.listbox.place_forget()  # Hide the dropdown after selection
+ 
