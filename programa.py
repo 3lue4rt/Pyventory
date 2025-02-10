@@ -15,7 +15,7 @@ import datetime
 
 #creates a Button given a frame, name and function
 def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
-    button = Button(frame, text=name, font=("Arial", 14), command= func)
+    button = Button(frame, text=name, font=("Arial", 14), command= func )
     button.pack(fill="both")
     return button
 
@@ -67,7 +67,7 @@ class App:
     def run(self) -> None:
         self.root.mainloop()
 
-#Terminal class, requires a parent Frame to sit on, displays text
+#Terminal class, requires a parent App to sit on, displays text
 class Terminal:
     def __init__(self, parentApp: App):
         #Parent Frame
@@ -96,7 +96,7 @@ class Terminal:
         self.text = "=> "
         self.update()
 
-#Main Menu class, requires a parent Frame to sit on, buttons for other menus
+#Main Menu class, requires a parent App to sit on, buttons for other menus
 class MainMenu:
     def __init__(self, parentApp: App):
         self.parentApp = parentApp
@@ -104,9 +104,13 @@ class MainMenu:
         self.parent = parentApp.mainFrame
         clear(self.parent)
         self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
+        self.insertButton.config(height= 5)
+        self.insertButton.pack(side=LEFT, fill=BOTH, expand=True)
         self.editButton = createButton(self.parent, "Buscar Computador", lambda : EditMenu(self.parentApp))
+        self.editButton.config(height = 5)
+        self.editButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
-# Insert menu class, requires a parent Frame to sit on, adds new computer to csv
+# Insert menu class, requires a parent App to sit on, adds new computer to csv
 class InsertMenu:
     def __init__(self, parentApp: App):
         self.parentApp = parentApp
@@ -172,7 +176,7 @@ class InsertMenu:
             self.parentApp.csvImport(listToData(self.result))
             self.cancelCommand()
 
-# Edit menu, requiers parent frame to sit on, starts the search for a PC
+# Edit menu, requiers parent App to sit on, starts the search for a PC
 class EditMenu:
     def __init__(self, parentApp: App):
         #parent Stuff
@@ -187,16 +191,14 @@ class EditMenu:
         self.parentApp.terminal.addLine("Ha seleccionado buscar un PC")
 
         #Menu Title
-        self.label = Label(self.parent, font=("Arial", 16), text= "Ingrese el número de PC")
+        self.label = Label(self.parent, font=("Arial", 16), text= "Busque por número de PC")
         self.label.pack()
 
         #Entry with dropdown list*
         self.entry = Entry(self.parent, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<KeyRelease>", self.update_list)  # Detect typing
-
         self.entry.bind("<Return>", self.getEntry)
-
         self.listbox = Listbox(self.parent, width=30, height=5,font=("Arial", 16))
         self.listbox.bind("<ButtonRelease-1>", self.select_item)
         self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
