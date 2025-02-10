@@ -104,7 +104,7 @@ class MainMenu:
         self.parent = parentApp.mainFrame
         clear(self.parent)
         self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
-        self.editButton = createButton(self.parent, "Editar Computador", lambda : EditMenu(self.parentApp))
+        self.editButton = createButton(self.parent, "Buscar Computador", lambda : EditMenu(self.parentApp))
 
 # Insert menu class, requires a parent Frame to sit on, adds new computer to csv
 class InsertMenu:
@@ -113,6 +113,9 @@ class InsertMenu:
         #Parent 
         self.parent = parentApp.mainFrame
         clear(self.parent)
+
+        #Welcome message
+        self.parentApp.terminal.addLine("Ha seleccionado ingresar un PC")
 
         #Data trait list
         self.result = []
@@ -180,8 +183,12 @@ class EditMenu:
         #Actual selected data
         self.selected: csvData | None = None
 
+        #Welcome message
+        self.parentApp.terminal.addLine("Ha seleccionado buscar un PC")
+
         #Menu Title
         self.label = Label(self.parent, font=("Arial", 16), text= "Ingrese el número de PC")
+        self.label.pack()
 
         #Entry with dropdown list*
         self.entry = Entry(self.parent, width=30, font=("Arial", 16))
