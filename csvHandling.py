@@ -64,7 +64,7 @@ def csvSearchBy(trait: str | int, index: int) -> list[csvData] | list[None] :
         reader = csv.reader(file)
         result: list[csvData] = []
         for row in reader:
-            if len(row)>1 and str(trait) in row[index]:
+            if len(row)>1 and index>0 and str(trait) in row[index]:
                 result.append(listToData(row))
         return result
 
