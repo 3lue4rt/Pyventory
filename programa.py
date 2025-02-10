@@ -183,6 +183,10 @@ class EditMenu:
         self.parentApp = parentApp
         self.parent = parentApp.mainFrame
         clear(self.parent)
+        self.subFrameLeft = Frame(self.parent)
+        self.subFrameLeft.pack(side=LEFT, fill= BOTH, expand=True)
+        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight.pack(side=RIGHT, fill= BOTH, expand=True)
         
         #Actual selected data
         self.selected: csvData | None = None
@@ -191,19 +195,20 @@ class EditMenu:
         self.parentApp.terminal.addLine("Ha seleccionado buscar un PC")
 
         #Menu Title
-        self.label = Label(self.parent, font=("Arial", 16), text= "Busque por número de PC")
+        self.label = Label(self.subFrameLeft, font=("Arial", 16), text= "Busque por número de PC")
         self.label.pack()
 
         #Entry with dropdown list*
-        self.entry = Entry(self.parent, width=30, font=("Arial", 16))
+        self.entry = Entry(self.subFrameLeft, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<KeyRelease>", self.update_list)  # Detect typing
         self.entry.bind("<Return>", self.getEntry)
-        self.listbox = Listbox(self.parent, width=30, height=5,font=("Arial", 16))
+        self.listbox = Listbox(self.subFrameLeft, width=30, height=5,font=("Arial", 16))
         self.listbox.bind("<ButtonRelease-1>", self.select_item)
         self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
 
-        self.cancelButton = createButton(self.parent, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+        self.cancelButton = createButton(self.subFrameRight, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+        self.cancelButton.pack(fill=BOTH, expand=TRUE)
 
     # gets the entry and sets the selected value to a csv
     # if no match, selected is None.
