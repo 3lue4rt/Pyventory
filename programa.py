@@ -63,6 +63,9 @@ class App:
     def csvSearch(self, trait: str, index: int) -> list[csvData]:
         return csvSearchBy(trait, index)
     
+    def csvDelete(self, data: csvData) -> int:
+        return csvRemove(data)
+    
     #Method for starting the app
     def run(self) -> None:
         self.root.mainloop()
@@ -207,12 +210,20 @@ class EditMenu:
         self.listbox.bind("<ButtonRelease-1>", self.select_item)
         self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
 
+        #delete button
+        self.deleteButton = createButton(self.subFrameRight, "Eliminar computador seleccionado", self.delete_item)
+        self.deleteButton.pack(fill=BOTH, expand=TRUE)
+
+        #cancel button
         self.cancelButton = createButton(self.subFrameRight, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
         self.cancelButton.pack(fill=BOTH, expand=TRUE)
 
     # gets the entry and sets the selected value to a csv
     # if no match, selected is None.
     def getEntry(self, dummyParameterForEntryBind=None):
+        if self.entry.get()=="":
+            self.parentApp.terminal.addLine("Porfavor escriba algo primero >:(")
+            return
         resultList = self.parentApp.csvSearch(self.entry.get(), 0)
         self.selected = resultList[0] if not resultList == [] else None # First result if not empty
         if not self.selected is None:
@@ -236,9 +247,16 @@ class EditMenu:
             else:
                 self.listbox.place_forget()  # Hide if no match
 
+    #method for selecting from the listBox
     def select_item(self, dummyParameterForEntryBind=None):
         selected = self.listbox.get(ACTIVE)  # Get the selected item
         self.entry.delete(0, END)
         self.entry.insert(0, selected)
         self.listbox.place_forget()  # Hide the dropdown after selection
  
+    def delete_item(self, dummyParameterForEntryBind=None):
+        if self.selected == None:
+            self.parentApp.terminal.addLine("Porfavor seleccione un PC válido")
+            return
+        quantity = self.parentApp.csvDelete(self.selected)
+        self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
