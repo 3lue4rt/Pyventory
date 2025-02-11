@@ -63,9 +63,11 @@ def csvSearchBy(trait: str | int, index: int) -> list[csvData] | list[None] :
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
         result: list[csvData] = []
+        headerindex = True
         for row in reader:
-            if len(row)>1 and index>0 and str(trait) in row[index]:
+            if len(row)>1 and not headerindex and str(trait) in row[index]:
                 result.append(listToData(row))
+            headerindex = False
         return result
 
 #Given data, its searches for all tuples equal to the data and removes them returning the number
