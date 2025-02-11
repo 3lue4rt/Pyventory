@@ -76,13 +76,31 @@ class Terminal:
         #Parent Frame
         self.parent = parentApp.terminalFrame
 
+        #canvas parent
+        #self.canvas=Canvas(self.parent)
+
+        #frame in the canvas
+        #self.frame = Frame(self.canvas)
+
+        #Scrollbar
+        #self.scrollBar = Scrollbar(self.canvas, orient=VERTICAL, command=self.canvas.yview)
+        #self.canvas.configure(yscrollcommand=self.scrollBar.set)
+
+        #self.parent.bind('<Configure>', lambda _: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        
+        #self.canvas.pack(fill=BOTH, expand=True)
+        #self.canvas.create_window((0, 0), window=self.frame)
+
+        #self.scrollBar.pack(side=RIGHT, fill=Y)
+
         #Initial text
         self.text = "=> Pyventory, BlueArt 2025"
 
         #Creates the Label for displaying text
         self.mainLabel = Label(self.parent, text=self.text, font=("Arial", 16), justify="left",anchor="sw")
-        self.mainLabel.pack(side="bottom", anchor="sw", fill="x", padx=10, pady=10)
+        self.mainLabel.pack(side="bottom", anchor="s", fill="x", padx=10, pady=10)
         self.mainLabel.bind('<Configure>', lambda e: self.mainLabel.config(wraplength=self.mainLabel.winfo_width()))
+
 
     #Updates the text in the Label with the self.text string
     def update(self):
@@ -109,7 +127,7 @@ class MainMenu:
         self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
         self.insertButton.config(height= 5)
         self.insertButton.pack(side=LEFT, fill=BOTH, expand=True)
-        self.editButton = createButton(self.parent, "Buscar Computador", lambda : EditMenu(self.parentApp))
+        self.editButton = createButton(self.parent, "Buscar Computador", lambda: SearchMenu(self.parentApp))
         self.editButton.config(height = 5)
         self.editButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
@@ -148,6 +166,7 @@ class InsertMenu:
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.entry.unbind("<Return>")
+        self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú principal")
         MainMenu(self.parentApp)
 
     def make(self, dummyParameterForEntryBind=None):
@@ -177,10 +196,12 @@ class InsertMenu:
         #Ends insert
         if self.index>8:
             self.parentApp.csvImport(listToData(self.result))
-            self.cancelCommand()
+            self.entry.unbind("<Return>")
+            self.parentApp.terminal.addLine("Volviendo al menú principal")
+            MainMenu(self.parentApp)
 
 # Edit menu, requiers parent App to sit on, starts the search for a PC
-class EditMenu:
+class SearchMenu:
     def __init__(self, parentApp: App):
         #parent Stuff
         self.parentApp = parentApp
@@ -210,13 +231,23 @@ class EditMenu:
         self.listbox.bind("<ButtonRelease-1>", self.select_item)
         self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
 
+        #Edit Button
+        self.editButton = createButton(self.subFrameRight, "Editar computador seleccionado", self.edit_item)
+        self.editButton.pack(fill=BOTH, expand=TRUE)
+
         #delete button
         self.deleteButton = createButton(self.subFrameRight, "Eliminar computador seleccionado", self.delete_item)
         self.deleteButton.pack(fill=BOTH, expand=TRUE)
 
         #cancel button
-        self.cancelButton = createButton(self.subFrameRight, "Cancelar y Volver", lambda: MainMenu(self.parentApp))
+        self.cancelButton = createButton(self.subFrameRight, "Volver", self.cancelCommand)
         self.cancelButton.pack(fill=BOTH, expand=TRUE)
+
+    #function for cancelButton for going back to the menu
+    def cancelCommand(self, dummyParameterForEntryBind=None):
+        self.entry.unbind("<Return>")
+        self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
+        MainMenu(self.parentApp)
 
     # gets the entry and sets the selected value to a csv
     # if no match, selected is None.
@@ -253,10 +284,78 @@ class EditMenu:
         self.entry.delete(0, END)
         self.entry.insert(0, selected)
         self.listbox.place_forget()  # Hide the dropdown after selection
+
+    def edit_item(self, dummyParameterForEntryBind=None):
+        if self.selected == None:
+            self.parentApp.terminal.addLine("Profavor seleccione un PC válido")
+            return
+        EditMenu(self.parentApp, self.selected)
  
+    #Method for deleting the selected data from the data.txt
     def delete_item(self, dummyParameterForEntryBind=None):
         if self.selected == None:
             self.parentApp.terminal.addLine("Porfavor seleccione un PC válido")
             return
         quantity = self.parentApp.csvDelete(self.selected)
         self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
+
+class EditMenu:
+    def __init__(self, parentApp: App, selected_data: csvData):
+        self.parentApp = parentApp
+        self.selected = selected_data
+
+        self.selectedTrait: str | None = None
+
+        self.parent = self.parentApp.mainFrame
+        clear(self.parent)
+        self.subFrameLeft = Frame(self.parent)
+        self.subFrameLeft.pack(fill=BOTH, expand=True, side=LEFT)
+        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight.pack(fill=BOTH, expand=True, side=RIGHT)
+
+        self.validTraits = header.copy()
+        self.validTraits.pop(0)
+
+        self.listbox = Listbox(self.subFrameLeft, width=30, height=5,font=("Arial", 16))
+        for trait in self.validTraits:
+            self.listbox.insert(END, trait)
+        self.listbox.bind("<ButtonRelease-1>", self.select_trait)
+        self.listbox.pack()
+
+        self.entry = Entry(self.subFrameLeft, width=30, font=("Arial", 16))
+        self.entry.pack()
+        self.entry.bind("<Return>", self.entryCommand)
+
+        self.cancelButton = createButton(self.subFrameRight, "Cancelar y volver", self.cancelCommand)
+        self.cancelButton.pack(fill=BOTH, expand=TRUE)
+
+    #asdfasdfasdf
+    def entryCommand(self, dummyParameterForEntryBind=None):
+        if self.entry.get() == "":
+            self.parentApp.terminal.addLine("Porfavor ingrese algo para editar")
+            return
+        if self.selectedTrait == None:
+            self.parentApp.terminal.addLine("Porfavor seleccione alguna parte para editar")
+            return
+        self.editSelected(self.entry.get(), self.validTraits.index(self.selectedTrait) + 1)
+        SearchMenu(self.parentApp)
+
+
+    #asdfasdf
+    def select_trait(self, dummyParameterForEntryBind=None):
+        self.selectedTrait = self.listbox.get(self.listbox.curselection())
+        self.parentApp.terminal.addLine(f"Ha seleccionado editar {self.selectedTrait}, el antiguo es {self.selected.exportList()[self.validTraits.index(self.selectedTrait) + 1]}")
+
+    #function for cancelButton for going back to the menu
+    def cancelCommand(self, dummyParameterForEntryBind=None):
+        self.entry.unbind("<Return>")
+        self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú de búsqueda")
+        SearchMenu(self.parentApp)
+
+    def editSelected(self, trait: str, index: int):
+        oldTrait = self.selected.exportList()[index]
+        result = csvEditTrait(self.selected, trait, index)
+        if result:
+            self.parentApp.terminal.addLine(f"El/La {header[index]} {oldTrait} ha sido cambiado por {trait}")
+        else:
+            self.parentApp.terminal.addLine("No se ha encontrado el pc, intentelo denuevo")

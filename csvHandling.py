@@ -93,13 +93,13 @@ def csvRemove(data: csvData) -> int:
 #Given old Data and new Data, it searches for the first tuple that matches the old data in the csv and replaces it
 #with the new data returning True, otherwise return False
 def csvEdit(oldData: csvData, newData: csvData) -> bool:
-    guardar: list[str] = []
+    guardar: list[list[str]] = []
     encontrado = False
     with open(filename, mode="r", newline="") as file:
         reader = csv.reader(file)
         for row in reader:
             if row==oldData.exportList() and not encontrado:
-                guardar.append(newData)
+                guardar.append(newData.exportList())
                 encontrado = True
             else:
                 guardar.append(row)
@@ -107,7 +107,6 @@ def csvEdit(oldData: csvData, newData: csvData) -> bool:
     if encontrado:
         with open(filename, mode="w", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow(header)
             writer.writerows(guardar)
 
     return encontrado
