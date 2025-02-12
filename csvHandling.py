@@ -1,5 +1,6 @@
 import csv
 import os
+from datetime import datetime
 
 #The name of the file to work with. defaults to 'data.txt'
 filename = "data.txt"
@@ -132,3 +133,13 @@ def csvEditTrait(oldData: csvData, newTrait: str | int, index: int) -> bool:
 
     return result
 
+#given a minimum date (defaults to 1-1-1 (min date)) and a maximum date (defaults to current date)
+#returns a list of data
+def dataRangeDate(minDate: datetime = datetime.min, maxDate: datetime = datetime.now()) -> list[csvData]:
+    result: list[csvData] = []
+    with open(filename, mode="r", newline="") as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if str(row[1])>=str(minDate) and str(row[1])<=str(maxDate):
+                result.append(listToData(row[1]))
+    return result
