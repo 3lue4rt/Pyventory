@@ -21,7 +21,11 @@ print(good)
 '''
 if __name__ == "__main__":
     for hoja in excel:
+        firstRow = True
         for row in hoja.iter_rows(values_only=True):
-            if not None in row:
+            #If is a valid tuple and isn't the header
+            if not None in row and not firstRow:
                 data = csvHandling.listToData(row)
                 csvHandling.csvInsert(data)
+            firstRow = False
+                
