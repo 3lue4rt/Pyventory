@@ -124,12 +124,18 @@ class MainMenu:
         #Parent
         self.parent = parentApp.mainFrame
         clear(self.parent)
+
         self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
         self.insertButton.config(height= 5)
         self.insertButton.pack(side=LEFT, fill=BOTH, expand=True)
+
         self.editButton = createButton(self.parent, "Buscar Computador", lambda: SearchMenu(self.parentApp))
         self.editButton.config(height = 5)
         self.editButton.pack(side=RIGHT, fill=BOTH, expand=True)
+
+        self.exportButton = createButton(self.parent, "Exportar/Vista Rápida", lambda: ExportMenu(self.parentApp))
+        self.exportButton.config(height = 5)
+        self.exportButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
 # Insert menu class, requires a parent App to sit on, adds new computer to csv
 class InsertMenu:
@@ -359,3 +365,48 @@ class EditMenu:
             self.parentApp.terminal.addLine(f"El/La {header[index]} {oldTrait} ha sido cambiado por {trait}")
         else:
             self.parentApp.terminal.addLine("No se ha encontrado el pc, intentelo denuevo")
+
+#export/quickview menu, requires parent App to sit on, lets you selct a range
+#of dates and shows you the pcs and number of pcs in that range, can export to .xlsx
+#with a pop up to save in the same folder as the program
+class ExportMenu:
+    def __init__(self, parentApp: App):
+        self.parentApp = parentApp
+        self.parent = self.parentApp.mainFrame
+        
+        clear(self.parent)
+
+        self.subFrameLeft = Frame(self.parent)
+        self.subFrameLeft.pack(fill=BOTH, side=LEFT)
+        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight.pack(fill=BOTH, side=RIGHT)
+
+        self.dateWidth=5
+        self.yearMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.monthMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.dayMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.yearMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.monthMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.dayMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
+        self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
+        self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
+
+        self.labelFrom.grid(column=0, row=0)
+        self.yearMin.grid(column=1, row=0)
+        self.monthMin.grid(column=2, row=0)
+        self.dayMin.grid(column=3, row=0)
+        self.labelTo.grid(column=0, row=1)
+        self.yearMax.grid(column=1, row=1)
+        self.monthMax.grid(column=2, row=1)
+        self.dayMax.grid(column=3, row=1)
+
+        self.displayList = Listbox(self.subFrameRight)
+
+        self.cancelButton = Button(self.subFrameLeft, command=self.cancelCommand, text="Volver", font=("Arial", 14))
+        self.cancelButton.grid(column=0, row=2, columnspan=4)
+
+
+    #function for cancelButton for going back to the menu
+    def cancelCommand(self, dummyParameterForEntryBind=None):
+        self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
+        MainMenu(self.parentApp)
