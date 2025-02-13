@@ -166,6 +166,7 @@ class InsertMenu:
         self.entry = Entry(self.parent, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<Return>", self.make)
+        self.entry.focus_set()
 
         self.cancelButton = createButton(self.parent, "Cancelar y Volver", self.cancelCommand)
 
