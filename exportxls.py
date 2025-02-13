@@ -3,20 +3,6 @@ import os
 import re
 from csvHandling import csvData
 
-'''
-interface for exportxls
-it helps export data as excel workbooks
-
-    def expAppend(workbook: Workbook, listData: list[csvData]) -> None:
-        
-
-    def expCheck(name: str) -> bool:
-        returns True if workbook exists, False otherwise
-
-    def expSave(Workbook: Workbook, name: str) -> bool:
-        Saves the Workbook with the given name returning True, if it can't, return False
-'''
-
 #given a list of data, appends data to the end of the active sheet in the workbook
 def expAppend(workbook: Workbook, listData: list[csvData]) -> None:
     for data in listData:
