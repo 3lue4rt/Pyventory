@@ -395,6 +395,10 @@ class ExportMenu:
         self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
         self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
 
+        #date Variables
+        self.dateFrom: datetime.datetime = datetime.datetime(1,1,1)
+        self.dateTo: datetime.datetime = datetime.datetime.now()
+
         #packing the date widgets within a grid
         self.labelFrom.grid(column=0, row=0)
         self.yearMin.grid(column=1, row=0)
@@ -417,3 +421,44 @@ class ExportMenu:
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
         MainMenu(self.parentApp)
+
+    #checks for the validity of the input dates, returns false if:
+    #any of the variables is None
+    #the "from" date is less than the minimum date
+    #the "to" date is more than the actual date
+    #returns True otherwise
+    def checkDateRange(self, dummyParameterForEntryBind=None) -> bool:
+        datecheck=lambda date: datetime.datetime(1,1,1)<date and date<datetime.datetime.now()
+        if self.dateFrom==None or self.dateTo==None:
+            return False
+        return datecheck(self.dateFrom) and datecheck(self.dateTo) and self.dateFrom<self.dateTo
+    
+    #checks the date entries for filling the date variables, 
+    def entryToVar(self, dummyParameterForEntryBind=None):
+        def quickcheck(var):
+            try:
+                return int(var)
+            except ValueError:
+                return None
+            
+        minyear = quickcheck(self.yearMin)
+        minmonth = quickcheck(self.monthMin)
+        minday = quickcheck(self.dayMin)
+        maxyear = quickcheck(self.yearMax)
+        maxmonth = quickcheck(self.monthMax)
+        maxday = quickcheck(self.dayMax)
+
+        if not None in [minyear, minmonth, minday]:
+            #self.parentApp.terminal.addLine("Porfavor ingrese un valor válido para la fecha")
+            try:
+                self.dateFrom = datetime.datetime(minyear, minmonth, minday)
+            except ValueError:
+                self.dateFrom = datetime.datetime(1,1,1)
+
+        if not None in [maxyear, maxmonth, maxday]:
+            #self.parentApp.terminal.addLine("Porfavor ingrese un valor válido para la fecha")
+            try:
+                self.dateTo = datetime.datetime(maxyear, maxmonth, maxday)
+            except ValueError:
+                self.dateTo = datetime.datetime.now()
+        
