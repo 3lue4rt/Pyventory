@@ -371,16 +371,20 @@ class EditMenu:
 #with a pop up to save in the same folder as the program
 class ExportMenu:
     def __init__(self, parentApp: App):
+        #initializing the parents
         self.parentApp = parentApp
         self.parent = self.parentApp.mainFrame
         
+        #we clear the frame so we can draw the new widgets
         clear(self.parent)
 
+        #subframes for organizing
         self.subFrameLeft = Frame(self.parent)
         self.subFrameLeft.pack(fill=BOTH, side=LEFT)
         self.subFrameRight = Frame(self.parent)
         self.subFrameRight.pack(fill=BOTH, side=RIGHT)
 
+        #Entries for dates
         self.dateWidth=5
         self.yearMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.monthMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
@@ -391,6 +395,7 @@ class ExportMenu:
         self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
         self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
 
+        #packing the date widgets within a grid
         self.labelFrom.grid(column=0, row=0)
         self.yearMin.grid(column=1, row=0)
         self.monthMin.grid(column=2, row=0)
@@ -400,8 +405,10 @@ class ExportMenu:
         self.monthMax.grid(column=2, row=1)
         self.dayMax.grid(column=3, row=1)
 
+        #display for the selected pcs
         self.displayList = Listbox(self.subFrameRight)
 
+        #button for returning
         self.cancelButton = Button(self.subFrameLeft, command=self.cancelCommand, text="Volver", font=("Arial", 14))
         self.cancelButton.grid(column=0, row=2, columnspan=4)
 
