@@ -395,10 +395,6 @@ class ExportMenu:
         self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
         self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
 
-        #date Variables
-        self.dateFrom: datetime.datetime = datetime.datetime(1,1,1)
-        self.dateTo: datetime.datetime = datetime.datetime.now()
-
         #packing the date widgets within a grid
         self.labelFrom.grid(column=0, row=0)
         self.yearMin.grid(column=1, row=0)
@@ -408,6 +404,13 @@ class ExportMenu:
         self.yearMax.grid(column=1, row=1)
         self.monthMax.grid(column=2, row=1)
         self.dayMax.grid(column=3, row=1)
+
+        #we focus on the first entry
+        self.yearMin.focus_set()
+
+        #date Variables
+        self.dateFrom: datetime.datetime = datetime.datetime(1,1,1)
+        self.dateTo: datetime.datetime = datetime.datetime.now()
 
         #display for the selected pcs
         self.displayList = Listbox(self.subFrameRight)
@@ -433,7 +436,8 @@ class ExportMenu:
             return False
         return datecheck(self.dateFrom) and datecheck(self.dateTo) and self.dateFrom<self.dateTo
     
-    #checks the date entries for filling the date variables, 
+    #checks the date entries for filling the date variables, if it
+    #finds inconsistencies, it goes back to the defaults
     def entryToVar(self, dummyParameterForEntryBind=None):
         def quickcheck(var):
             try:
@@ -441,21 +445,21 @@ class ExportMenu:
             except ValueError:
                 return None
             
-        minyear = quickcheck(self.yearMin)
-        minmonth = quickcheck(self.monthMin)
-        minday = quickcheck(self.dayMin)
-        maxyear = quickcheck(self.yearMax)
-        maxmonth = quickcheck(self.monthMax)
-        maxday = quickcheck(self.dayMax)
+        minyear = quickcheck(self.yearMin.get())
+        minmonth = quickcheck(self.monthMin.get())
+        minday = quickcheck(self.dayMin.get())
+        maxyear = quickcheck(self.yearMax.get())
+        maxmonth = quickcheck(self.monthMax.get())
+        maxday = quickcheck(self.dayMax.get())
 
-        if not None in [minyear, minmonth, minday]:
+        if not None in (minyear, minmonth, minday):
             #self.parentApp.terminal.addLine("Porfavor ingrese un valor válido para la fecha")
             try:
                 self.dateFrom = datetime.datetime(minyear, minmonth, minday)
             except ValueError:
                 self.dateFrom = datetime.datetime(1,1,1)
 
-        if not None in [maxyear, maxmonth, maxday]:
+        if not None in (maxyear, maxmonth, maxday):
             #self.parentApp.terminal.addLine("Porfavor ingrese un valor válido para la fecha")
             try:
                 self.dateTo = datetime.datetime(maxyear, maxmonth, maxday)
