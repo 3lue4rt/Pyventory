@@ -466,4 +466,13 @@ class ExportMenu:
                 self.dateTo = datetime.datetime(maxyear, maxmonth, maxday)
             except ValueError:
                 self.dateTo = datetime.datetime.now()
+
+        #updates the list with the valid entries
+    
+    #updates the list for the valid dates
+    def updateList(self, dummyParameterForEntryBind=None):
+        result = dataRangeDate(self.dateFrom, self.dateTo)
+        self.displayList.place_forget()
+        for data in result:
+            self.displayList.insert(END, data.exportList[0])
         
