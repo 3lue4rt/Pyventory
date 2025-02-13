@@ -386,7 +386,7 @@ class ExportMenu:
         self.subFrameRight.pack(fill=BOTH, side=RIGHT)
 
         #Entries for dates
-        self.dateWidth=5
+        self.dateWidth=10
         self.yearMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.monthMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.dayMin = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
@@ -395,6 +395,13 @@ class ExportMenu:
         self.dayMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
         self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
+
+        self.yearMin.bind("<Return>", lambda event: self.dateBind(event, self.monthMin))
+        self.monthMin.bind("<Return>", lambda event: self.dateBind(event, self.dayMin))
+        self.dayMin.bind("<Return>", lambda event: self.dateBind(event, self.yearMax))
+        self.yearMax.bind("<Return>", lambda event: self.dateBind(event, self.monthMax))
+        self.monthMax.bind("<Return>", lambda event: self.dateBind(event, self.dayMax))
+        self.dayMax.bind("<Return>", lambda event: self.dateBind(event, self.yearMin))
 
         #packing the date widgets within a grid
         self.labelFrom.grid(column=0, row=0)
@@ -414,15 +421,28 @@ class ExportMenu:
         self.dateTo: datetime.datetime = datetime.datetime.now()
 
         #display for the selected pcs
-        self.displayList = Listbox(self.subFrameRight)
+        self.displayList = Listbox(self.subFrameRight, font=("Arial", 16), height=5)
+        self.displayList.pack(fill=BOTH, expand=True)
+        self.updateList()
+
+        #button for exporting
+        self.exportButton = Button(self.subFrameLeft, 
+                                   command= lambda: ExportWindow(self), 
+                                   text="Exportar seleccionados", 
+                                   font=("Arial", 14))
+        self.exportButton.grid(column=1, row=2, columnspan=3)
 
         #button for returning
-        self.cancelButton = Button(self.subFrameLeft, command=self.cancelCommand, text="Volver", font=("Arial", 14))
-        self.cancelButton.grid(column=0, row=2, columnspan=4)
+        self.cancelButton = Button(self.subFrameLeft, 
+                                   command=self.cancelCommand, 
+                                   text="Volver", 
+                                   font=("Arial", 14))
+        self.cancelButton.grid(column=2, row=3)
 
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
+        self.parentApp.root.unbind_all("<Return>")
         self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
         MainMenu(self.parentApp)
 
@@ -472,7 +492,56 @@ class ExportMenu:
     #updates the list for the valid dates
     def updateList(self, dummyParameterForEntryBind=None):
         result = dataRangeDate(self.dateFrom, self.dateTo)
-        self.displayList.place_forget()
+        self.displayList.delete(0, END)
         for data in result:
-            self.displayList.insert(END, data.exportList[0])
+            self.displayList.insert(END, data.exportList()[0])
+
+    def dateBind(self, event, next: Entry):
+        if not self.checkDateRange():
+            self.parentApp.terminal.addLine("La fecha actual no es válida")
+
+        self.entryToVar()
+        self.updateList()
+        next.focus_set()
+        self.parentApp.terminal.addLine(f"El total de computadores seleccionados es {len(dataRangeDate(self.dateFrom, self.dateTo))}")
+
+class ExportWindow:
+    def __init__(self, exportMenu: ExportMenu):
+        self.parentMenu = exportMenu
+        self.parentApp = self.parentMenu.parentApp
+        self.parent = self.parentApp.mainFrame
+
+        self.popUp = Toplevel(self.parentApp.root)
+        self.popUp.title("Exportando...")
+        self.popUp.geometry("400x200")
+
+        self.label = Label(self.popUp, text=f'''Está exportando {len(dataRangeDate(self.parentMenu.dateFrom, self.parentMenu.dateTo))} elementos, escriba el nombre del archivo a guardar:''', font=("Arial", 14))
+        self.label.bind('<Configure>', lambda e: self.label.config(wraplength=self.label.winfo_width()))
+        self.label.pack()
+
+        self.entry = Entry(self.popUp, font=("Arial", 14))
+        self.entry.bind("<Return>", lambda event: self.exportData(event, self.entry.get()))
+        self.entry.pack()
+
+
+    def exportData(self, event=None, name = "inventario"):
+        result = dataRangeDate(self.parentMenu.dateFrom, self.parentMenu.dateTo)
+        book = Workbook()
+        book.active.append(header)
+        expAppend(book, result)
+        book.active.column_dimensions["A"].width = 15
+        book.active.column_dimensions["B"].width = 20
+        book.active.column_dimensions["C"].width = 10
+        book.active.column_dimensions["D"].width = 28
+        book.active.column_dimensions["E"].width = 20
+        book.active.column_dimensions["F"].width = 15
+        book.active.column_dimensions["G"].width = 15
+        book.active.column_dimensions["H"].width = 40
+        book.active.column_dimensions["I"].width = 20
+
+        if expSave(book, name):
+            self.parentApp.terminal.addLine(f"Se ha guardado exitosamente el documento {name}")
+            self.popUp.destroy()
+        else:
+            self.parentApp.terminal.addLine("No se ha podido guardar el documento, el nombre no es aceptable")
         

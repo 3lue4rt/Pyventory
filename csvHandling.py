@@ -141,5 +141,5 @@ def dataRangeDate(minDate: datetime = datetime.min, maxDate: datetime = datetime
         reader = csv.reader(file)
         for row in reader:
             if str(row[1])>=str(minDate) and str(row[1])<=str(maxDate):
-                result.append(listToData(row[1]))
+                result.append(listToData(row))
     return result
