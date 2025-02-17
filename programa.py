@@ -207,6 +207,9 @@ class InsertMenu:
             self.parentApp.terminal.addLine("Volviendo al menú principal")
             MainMenu(self.parentApp)
 
+        return
+
+
 # Edit menu, requiers parent App to sit on, starts the search for a PC
 class SearchMenu:
     def __init__(self, parentApp: App):
