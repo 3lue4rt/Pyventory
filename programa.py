@@ -168,6 +168,10 @@ class InsertMenu:
         self.entry.bind("<Return>", self.make)
         self.entry.focus_set()
 
+        #Listbox for some traits
+        self.listBox = Listbox(self.parent, font=("Arial", 16), height=5)
+        self.entry.bind("<KeyRelease>", self.update_list)
+
         self.cancelButton = createButton(self.parent, "Cancelar y Volver", self.cancelCommand)
 
     #function for cancelButton for going back to the menu
@@ -207,7 +211,22 @@ class InsertMenu:
             self.parentApp.terminal.addLine("Volviendo al menú principal")
             MainMenu(self.parentApp)
 
-        return
+    #fills the listbox with the known traits
+    def update_list(self, dummyParameterForEntryBind=None):  # Clear previous items
+        if self.index!=2 or self.index!=7:
+            self.listBox.pack_forget()
+            return
+        self.listBox.delete(0, END)
+        if self.entry.get()!="":  # Show matching items
+            filtered = self.parentApp.csvSearch(self.entry.get(), 0)
+            if not filtered == []:
+                for item in filtered:
+                    self.listBox.insert(END, item.exportList()[self.index])
+
+                # Position the Listbox below the Entry widget
+                self.listBox.pack(after=self.entry)
+            else:
+                self.listBox.pack_forget()  # Hide if no match
 
 
 # Edit menu, requiers parent App to sit on, starts the search for a PC
