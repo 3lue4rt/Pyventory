@@ -24,7 +24,7 @@ if __name__ == "__main__":
         firstRow = True
         for row in hoja.iter_rows(values_only=True):
             #If is a valid tuple and isn't the header
-            if not None in row and not firstRow:
+            if not None==row[0] and not firstRow:
                 data = csvHandling.listToData(row)
                 csvHandling.csvInsert(data)
             firstRow = False

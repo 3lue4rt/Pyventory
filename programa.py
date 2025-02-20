@@ -232,10 +232,16 @@ class InsertMenu:
             self.label.config(text=self.header[self.index])
 
         #Handles no entry by the user
-        elif self.entry.get()=="":
-            self.parentApp.terminal.addLine("No se puede ingresar nada, ingrese algo")
+        #elif self.entry.get()=="":
+        #    self.parentApp.terminal.addLine("No se puede ingresar nada, ingrese algo")
 
         #General case
+        if self.index==0 and self.entry.get()=="":
+            self.parentApp.terminal.addLine(f"Porfavor ingrese un número de PC")
+            return
+        if self.index==0 and csvSearchBy(self.entry.get(), 0):
+            self.parentApp.terminal.addLine(f"Ese numero de PC ya fue ocupado, edite o elimine el antiguo.")
+            return
         else:
             self.result.append(self.entry.get())
             self.entry.delete(0,END)
@@ -460,6 +466,7 @@ class EditMenu:
 
         self.validTraits = header.copy()
         self.validTraits.pop(0)
+        self.validTraits = list(trait+f": {self.selected.exportList()[self.validTraits.index(trait) + 1]}" for trait in self.validTraits)
 
         self.listbox = Listbox(self.subFrameLeft, width=30, height=5,font=("Arial", 16))
         for trait in self.validTraits:
@@ -497,7 +504,7 @@ class EditMenu:
     #asdfasdf
     def select_trait(self, dummyParameterForEntryBind=None):
         self.selectedTrait = self.listbox.get(self.listbox.curselection())
-        self.parentApp.terminal.addLine(f"Ha seleccionado editar {self.selectedTrait}, el antiguo es {self.selected.exportList()[self.validTraits.index(self.selectedTrait) + 1]}")
+        self.parentApp.terminal.addLine(f"Ha seleccionado editar {self.selectedTrait}")
         self.entry.focus()
 
     #function for cancelButton for going back to the menu
@@ -513,7 +520,7 @@ class EditMenu:
         oldTrait = self.selected.exportList()[index]
         result = csvEditTrait(self.selected, trait, index)
         if result:
-            self.parentApp.terminal.addLine(f"El/La {header[index]} {oldTrait} ha sido cambiado por {trait}")
+            self.parentApp.terminal.addLine(f"El/La {header[index]} {oldTrait if oldTrait else "<NADA>"} ha sido cambiado por {trait}")
         else:
             self.parentApp.terminal.addLine("No se ha encontrado el pc, intentelo denuevo")
 
