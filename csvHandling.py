@@ -66,7 +66,7 @@ def csvSearchBy(trait: str | int, index: int) -> list[csvData] | list[None] :
         result: list[csvData] = []
         headerindex = True
         for row in reader:
-            if len(row)>1 and not headerindex and str(trait) in row[index]:
+            if len(row)>1 and not headerindex and str(trait).casefold() in row[index].casefold():
                 result.append(listToData(row))
             headerindex = False
         return result

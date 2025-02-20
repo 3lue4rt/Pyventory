@@ -206,19 +206,27 @@ class InsertMenu:
         self.entry.focus_set()
 
         #Listbox for some traits
-        self.listBox = Listbox(self.parent, font=("Arial", 16), height=5)
+        self.listBox = Listbox(self.parent, font=("Arial", 16), height=5, width=50)
         self.entry.bind("<KeyRelease>", self.update_list)
+        self.entry.bind("<Down>", self.setListBoxFocus)
+        self.listBox.bind("<Return>", self.select_trait)
+        self.listBox.pack()
 
         self.cancelButton = createButton(self.parent, "Cancelar y Volver\n<Esc>", self.cancelCommand)
         self.parentApp.root.bind("<Escape>", self.cancelCommand)
         self.cancelButton.pack_configure(fill="none", expand=False)
 
+    def setListBoxFocus(self, event=None):
+        self.listBox.focus()
+        self.listBox.select_set(0)
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.entry.unbind("<Return>")
         self.parentApp.root.unbind("<Escape>")
         self.entry.unbind("<KeyRelease>")
+        self.entry.unbind("<Down>")
+        self.listBox.unbind("<Return>")
         for widget in self.parent.winfo_children():
             widget.destroy()
         self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú principal")
@@ -230,18 +238,22 @@ class InsertMenu:
             self.result.append(str(datetime.datetime.now()))
             self.index += 1
             self.label.config(text=self.header[self.index])
+            self.parentApp.terminal.addLine(f"se ha ingresado hasta ahora: {self.result}")
+            return
 
         #Handles no entry by the user
         #elif self.entry.get()=="":
         #    self.parentApp.terminal.addLine("No se puede ingresar nada, ingrese algo")
 
-        #General case
+        #No empty ID
         if self.index==0 and self.entry.get()=="":
             self.parentApp.terminal.addLine(f"Porfavor ingrese un número de PC")
             return
+        #No repeating ID
         if self.index==0 and csvSearchBy(self.entry.get(), 0):
             self.parentApp.terminal.addLine(f"Ese numero de PC ya fue ocupado, edite o elimine el antiguo.")
             return
+        #general case
         else:
             self.result.append(self.entry.get())
             self.entry.delete(0,END)
@@ -260,26 +272,28 @@ class InsertMenu:
             self.entry.unbind("<Return>")
             self.parentApp.root.unbind("<Escape>")
             self.entry.unbind("<KeyRelease>")
+            self.entry.unbind("<Down>")
+            self.listBox.unbind("<Return>")
             self.parentApp.terminal.addLine("Volviendo al menú principal")
+            for widget in self.parent.winfo_children():
+                widget.destroy()
             MainMenu(self.parentApp)
 
+    def select_trait(self, event = None):
+        selected = self.listBox.get(self.listBox.curselection())  # Get the selected item
+        self.entry.delete(0, END)
+        self.entry.insert(0, selected)
+        self.entry.focus()
+
     #fills the listbox with the known traits
-    def update_list(self, dummyParameterForEntryBind=None):  # Clear previous items
-        if self.index!=2 or self.index!=7:
-            self.listBox.pack_forget()
-            return
+    def update_list(self, dummyParameterForEntryBind=None): # Clear previous items
         self.listBox.delete(0, END)
-        if self.entry.get()!="":  # Show matching items
-            filtered = self.parentApp.csvSearch(self.entry.get(), 0)
-            if not filtered == []:
-                for item in filtered:
-                    self.listBox.insert(END, item.exportList()[self.index])
-
-                # Position the Listbox below the Entry widget
-                self.listBox.pack(after=self.entry)
-            else:
-                self.listBox.pack_forget()  # Hide if no match
-
+        if self.index!=2 and self.index!=7:
+            return
+        if self.entry.get():  # Show matching items
+            filtered = set(thing.exportList()[self.index] for thing in self.parentApp.csvSearch(self.entry.get(), self.index))
+            for item in filtered:
+                self.listBox.insert(END, item)
 # Edit menu, requiers parent App to sit on, starts the search for a PC
 class SearchMenu:
     def __init__(self, parentApp: App):
