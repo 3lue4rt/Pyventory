@@ -13,9 +13,20 @@ from exportxls import *
 from csvHandling import *
 import datetime
 
+black = "#1D1E18"
+reseda_green = "#6B8F71"
+celadon = "#AAD2BA"
+mint_green = "#D9FFF5"
+celados = "#B9F5D8"
+
 #creates a Button given a frame, name and function
 def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
-    button = Button(frame, text=name, font=("Arial", 14), command= func )
+    button = Button(frame, 
+                    text=name, 
+                    font=("Arial", 14), 
+                    command= func,
+                    background=celadon,
+                    foreground="Black")
     button.pack(fill="both")
     return button
 
@@ -33,15 +44,15 @@ class App:
         self.root.geometry("800x450")
 
         #Creates the Frame for the menu
-        self.mainFrame = Frame(self.root, padx=10, pady=10)
+        self.mainFrame = Frame(self.root, padx=10, pady=10, background=black)
         self.mainFrame.pack(fill="both")
 
         #Creates the Main Menu in the respective Frame
         self.mainMenu = MainMenu(self)
 
         #Creates the Frame for the terminal
-        self.terminalFrame = Frame(self.root, padx=10, pady=10)
-        self.terminalFrame.pack(fill="both")
+        self.terminalFrame = Frame(self.root, padx=10, pady=10, background=black)
+        self.terminalFrame.pack(fill="both", expand=True)
 
         #Creates the Terminal in the respective Frame
         self.terminal = Terminal(self)
@@ -97,7 +108,13 @@ class Terminal:
         self.text = "=> Pyventory, BlueArt 2025"
 
         #Creates the Label for displaying text
-        self.mainLabel = Label(self.parent, text=self.text, font=("Arial", 16), justify="left",anchor="sw")
+        self.mainLabel = Label(self.parent, 
+                               text=self.text, 
+                               font=("Arial", 16), 
+                               justify="left",
+                               anchor="sw", 
+                               background=black,
+                               foreground=mint_green)
         self.mainLabel.pack(side="bottom", anchor="s", fill="x", padx=10, pady=10)
         self.mainLabel.bind('<Configure>', lambda e: self.mainLabel.config(wraplength=self.mainLabel.winfo_width()))
 
@@ -109,7 +126,7 @@ class Terminal:
     #Adds a line of text to the bottom of the Label
     # NEEDS TESTING FOR OVERFLOW
     def addLine(self, text: str):
-        self.text += "\n=> "+text
+        self.text += "\n\n=> "+text
         self.update()
 
     #Deletes all text in Label
@@ -125,17 +142,31 @@ class MainMenu:
         self.parent = parentApp.mainFrame
         clear(self.parent)
 
-        self.insertButton = createButton(self.parent, "Ingresar Computador", lambda : InsertMenu(self.parentApp))
+        self.insertButton = createButton(self.parent, "Ingresar Computador \n(i)", 
+                                         lambda: self.menu_bind(0, InsertMenu))
+        self.parentApp.root.bind("i", lambda event: self.menu_bind(event, InsertMenu))
         self.insertButton.config(height= 5)
         self.insertButton.pack(side=LEFT, fill=BOTH, expand=True)
 
-        self.editButton = createButton(self.parent, "Buscar Computador", lambda: SearchMenu(self.parentApp))
+        self.editButton = createButton(self.parent, "Buscar/Editar/Eliminar Computador \n(b)", 
+                                       lambda : self.menu_bind(0, SearchMenu))
+        self.parentApp.root.bind("b", lambda event: self.menu_bind(event, SearchMenu))
         self.editButton.config(height = 5)
         self.editButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        self.exportButton = createButton(self.parent, "Exportar/Vista Rápida", lambda: ExportMenu(self.parentApp))
+        self.exportButton = createButton(self.parent, "Exportar/Vista Rápida \n(e)", 
+                                         lambda : self.menu_bind(0, ExportMenu))
+        self.parentApp.root.bind("e", lambda event: self.menu_bind(event, ExportMenu))
         self.exportButton.config(height = 5)
         self.exportButton.pack(side=RIGHT, fill=BOTH, expand=True)
+
+    def menu_bind(self, event=None,Menu=None):
+        self.parentApp.root.unbind("i")
+        self.parentApp.root.unbind("b")
+        self.parentApp.root.unbind("e")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
+        Menu(self.parentApp)
 
 # Insert menu class, requires a parent App to sit on, adds new computer to csv
 class InsertMenu:
@@ -159,7 +190,13 @@ class InsertMenu:
         self.index=0
 
         #Menu structure
-        self.label = Label(self.parent, text=self.header[self.index], font=("Arial", 16))
+        self.label = Label(self.parent, 
+                           text=self.header[self.index], 
+                           font=("Arial", 16), 
+                           background=celadon,
+                           foreground="black",
+                           padx=10,
+                           pady=10)
         self.label.pack()
         
         #Entry for traits from the User, make() method dictates the input structure
@@ -172,11 +209,18 @@ class InsertMenu:
         self.listBox = Listbox(self.parent, font=("Arial", 16), height=5)
         self.entry.bind("<KeyRelease>", self.update_list)
 
-        self.cancelButton = createButton(self.parent, "Cancelar y Volver", self.cancelCommand)
+        self.cancelButton = createButton(self.parent, "Cancelar y Volver\n<Esc>", self.cancelCommand)
+        self.parentApp.root.bind("<Escape>", self.cancelCommand)
+        self.cancelButton.pack_configure(fill="none", expand=False)
+
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.entry.unbind("<Return>")
+        self.parentApp.root.unbind("<Escape>")
+        self.entry.unbind("<KeyRelease>")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú principal")
         MainMenu(self.parentApp)
 
@@ -208,6 +252,8 @@ class InsertMenu:
         if self.index>8:
             self.parentApp.csvImport(listToData(self.result))
             self.entry.unbind("<Return>")
+            self.parentApp.root.unbind("<Escape>")
+            self.entry.unbind("<KeyRelease>")
             self.parentApp.terminal.addLine("Volviendo al menú principal")
             MainMenu(self.parentApp)
 
@@ -228,7 +274,6 @@ class InsertMenu:
             else:
                 self.listBox.pack_forget()  # Hide if no match
 
-
 # Edit menu, requiers parent App to sit on, starts the search for a PC
 class SearchMenu:
     def __init__(self, parentApp: App):
@@ -236,9 +281,10 @@ class SearchMenu:
         self.parentApp = parentApp
         self.parent = parentApp.mainFrame
         clear(self.parent)
-        self.subFrameLeft = Frame(self.parent)
+
+        self.subFrameLeft = Frame(self.parent, background=black)
         self.subFrameLeft.pack(side=LEFT, fill= BOTH, expand=True)
-        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight = Frame(self.parent, background=black)
         self.subFrameRight.pack(side=RIGHT, fill= BOTH, expand=True)
         
         #Actual selected data
@@ -248,7 +294,10 @@ class SearchMenu:
         self.parentApp.terminal.addLine("Ha seleccionado buscar un PC")
 
         #Menu Title
-        self.label = Label(self.subFrameLeft, font=("Arial", 16), text= "Busque por número de PC")
+        self.label = Label(self.subFrameLeft, 
+                           font=("Arial", 16), 
+                           text= "Busque por número de PC",
+                           background=celadon)
         self.label.pack()
 
         #Entry with dropdown list*
@@ -258,23 +307,40 @@ class SearchMenu:
         self.entry.bind("<Return>", self.getEntry)
         self.listbox = Listbox(self.subFrameLeft, width=30, height=5,font=("Arial", 16))
         self.listbox.bind("<ButtonRelease-1>", self.select_item)
+        self.listbox.bind("<Return>", self.select_item)
         self.entry.bind("<FocusOut>", lambda dummyvar: self.listbox.place_forget()) #click out clears box
+        self.entry.bind("<Down>", self.select_from_entry) #select the first item in listbox when in entry
 
         #Edit Button
-        self.editButton = createButton(self.subFrameRight, "Editar computador seleccionado", self.edit_item)
+        self.editButton = createButton(self.subFrameRight, "Editar computador seleccionado\n<Ctrl+e>", self.edit_item)
+        self.parentApp.root.bind("<Control-e>", self.edit_item)
         self.editButton.pack(fill=BOTH, expand=TRUE)
 
         #delete button
-        self.deleteButton = createButton(self.subFrameRight, "Eliminar computador seleccionado", self.delete_item)
+        self.deleteButton = createButton(self.subFrameRight, "Eliminar computador seleccionado\n<Ctrl+d>", self.delete_item)
+        self.parentApp.root.bind("<Control-d>", self.delete_item)
         self.deleteButton.pack(fill=BOTH, expand=TRUE)
 
         #cancel button
-        self.cancelButton = createButton(self.subFrameRight, "Volver", self.cancelCommand)
+        self.cancelButton = createButton(self.subFrameRight, "Volver\n<Esc>", self.cancelCommand)
+        self.parentApp.root.bind("<Escape>", self.cancelCommand)
         self.cancelButton.pack(fill=BOTH, expand=TRUE)
+
+        self.entry.focus() #focus on the entry when started
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.entry.unbind("<Return>")
+        self.entry.unbind("<KeyRelease>")
+        self.entry.unbind("<FocusOut>")
+        self.entry.unbind("<Down>")
+        self.listbox.unbind("<ButtonRelease-1>")
+        self.listbox.unbind("<Return>")
+        self.parentApp.root.unbind("<Escape>")
+        self.parentApp.root.unbind("<Control-e>")
+        self.parentApp.root.unbind("<Control-d>")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
         MainMenu(self.parentApp)
 
@@ -309,24 +375,74 @@ class SearchMenu:
 
     #method for selecting from the listBox
     def select_item(self, dummyParameterForEntryBind=None):
-        selected = self.listbox.get(ACTIVE)  # Get the selected item
+        selected = self.listbox.get(self.listbox.curselection())  # Get the selected item
         self.entry.delete(0, END)
         self.entry.insert(0, selected)
+        self.entry.focus()
         self.listbox.place_forget()  # Hide the dropdown after selection
 
     def edit_item(self, dummyParameterForEntryBind=None):
         if self.selected == None:
-            self.parentApp.terminal.addLine("Profavor seleccione un PC válido")
+            self.parentApp.terminal.addLine("Porfavor seleccione un PC válido")
             return
+        self.entry.unbind("<Return>")
+        self.entry.unbind("<KeyRelease>")
+        self.entry.unbind("<FocusOut>")
+        self.entry.unbind("<Down>")
+        self.listbox.unbind("<ButtonRelease-1>")
+        self.listbox.unbind("<Return>")
+        self.parentApp.root.unbind("<Escape>")
+        self.parentApp.root.unbind("<Control-e>")
+        self.parentApp.root.unbind("<Control-d>")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         EditMenu(self.parentApp, self.selected)
+
+    def select_from_entry(self, event=None):
+        self.listbox.focus()
+        self.listbox.select_set(0)
  
     #Method for deleting the selected data from the data.txt
     def delete_item(self, dummyParameterForEntryBind=None):
         if self.selected == None:
             self.parentApp.terminal.addLine("Porfavor seleccione un PC válido")
             return
+        DeletePopUp(self.parentApp, self.selected)
+        #quantity = self.parentApp.csvDelete(self.selected)
+        #self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
+
+class DeletePopUp:
+    def __init__(self, parentApp:App, selected: csvData):
+        self.parentApp = parentApp
+        self.selected = selected
+        self.popUp = Toplevel(self.parentApp.root)
+
+        self.parent = Frame(self.popUp, background=black)
+        self.label = Label(self.parent, 
+                           text=f"¿Está seguro que quiere eliminar el computador: {self.selected.numero_pc}?",
+                           background=black,
+                           foreground=mint_green,
+                           font=("Arial", 16))
+        self.options = Label(self.parent,
+                             text= "Escriba eliminar para confirmar\nPresione <Esc> para abortar",
+                             background=black,
+                             foreground=mint_green,
+                             font=("Arial", 16))
+        self.parent.pack(fill=BOTH, expand=True)
+        self.label.pack()
+        self.options.pack()
+        self.popUp.bind("eliminar", self.handleDelete)
+        self.popUp.bind("<Escape>", self.handleEscape)
+        self.popUp.focus()
+        
+    def handleDelete(self, event=None):
         quantity = self.parentApp.csvDelete(self.selected)
         self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
+        self.popUp.destroy()
+
+    def handleEscape(self, event=None):
+        self.parentApp.terminal.addLine("Proceso abortado")
+        self.popUp.destroy()
 
 class EditMenu:
     def __init__(self, parentApp: App, selected_data: csvData):
@@ -337,9 +453,9 @@ class EditMenu:
 
         self.parent = self.parentApp.mainFrame
         clear(self.parent)
-        self.subFrameLeft = Frame(self.parent)
+        self.subFrameLeft = Frame(self.parent, background=black)
         self.subFrameLeft.pack(fill=BOTH, expand=True, side=LEFT)
-        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight = Frame(self.parent, background=black)
         self.subFrameRight.pack(fill=BOTH, expand=True, side=RIGHT)
 
         self.validTraits = header.copy()
@@ -349,13 +465,17 @@ class EditMenu:
         for trait in self.validTraits:
             self.listbox.insert(END, trait)
         self.listbox.bind("<ButtonRelease-1>", self.select_trait)
+        self.listbox.focus()
+        self.listbox.select_set(0)
+        self.listbox.bind("<Return>", self.select_trait)
         self.listbox.pack()
 
         self.entry = Entry(self.subFrameLeft, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<Return>", self.entryCommand)
 
-        self.cancelButton = createButton(self.subFrameRight, "Cancelar y volver", self.cancelCommand)
+        self.cancelButton = createButton(self.subFrameRight, "Cancelar y volver\n<Esc>", self.cancelCommand)
+        self.parentApp.root.bind("<Escape>", self.cancelCommand)
         self.cancelButton.pack(fill=BOTH, expand=TRUE)
 
     #asdfasdfasdf
@@ -366,7 +486,11 @@ class EditMenu:
         if self.selectedTrait == None:
             self.parentApp.terminal.addLine("Porfavor seleccione alguna parte para editar")
             return
+        self.entry.unbind("<Return>")
+        self.parentApp.root.unbind("<Escape>")
         self.editSelected(self.entry.get(), self.validTraits.index(self.selectedTrait) + 1)
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         SearchMenu(self.parentApp)
 
 
@@ -374,11 +498,15 @@ class EditMenu:
     def select_trait(self, dummyParameterForEntryBind=None):
         self.selectedTrait = self.listbox.get(self.listbox.curselection())
         self.parentApp.terminal.addLine(f"Ha seleccionado editar {self.selectedTrait}, el antiguo es {self.selected.exportList()[self.validTraits.index(self.selectedTrait) + 1]}")
+        self.entry.focus()
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.entry.unbind("<Return>")
+        self.parentApp.root.unbind("<Escape>")
         self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú de búsqueda")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         SearchMenu(self.parentApp)
 
     def editSelected(self, trait: str, index: int):
@@ -400,11 +528,12 @@ class ExportMenu:
         
         #we clear the frame so we can draw the new widgets
         clear(self.parent)
+        
 
         #subframes for organizing
-        self.subFrameLeft = Frame(self.parent)
+        self.subFrameLeft = Frame(self.parent,background=black)
         self.subFrameLeft.pack(fill=BOTH, side=LEFT)
-        self.subFrameRight = Frame(self.parent)
+        self.subFrameRight = Frame(self.parent,background=black)
         self.subFrameRight.pack(fill=BOTH, side=RIGHT)
 
         #Entries for dates
@@ -415,28 +544,39 @@ class ExportMenu:
         self.yearMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.monthMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
         self.dayMax = Entry(self.subFrameLeft, font=("Arial", 14), width=self.dateWidth)
-        self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14))
-        self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14))
+        self.labelFrom = Label(self.subFrameLeft, text="Desde: ", font=("Arial", 14),background=black, foreground=mint_green)
+        self.labelTo = Label(self.subFrameLeft, text="Hasta: ", font=("Arial", 14),background=black, foreground=mint_green)
+        self.dia = Label(self.subFrameLeft, text="Día:", font=("Arial", 14),background=black, foreground=mint_green)
+        self.mes = Label(self.subFrameLeft, text="Mes:", font=("Arial", 14),background=black, foreground=mint_green)
+        self.anho = Label(self.subFrameLeft, text="Año:", font=("Arial", 14),background=black, foreground=mint_green)
 
-        self.yearMin.bind("<Return>", lambda event: self.dateBind(event, self.monthMin))
-        self.monthMin.bind("<Return>", lambda event: self.dateBind(event, self.dayMin))
-        self.dayMin.bind("<Return>", lambda event: self.dateBind(event, self.yearMax))
+        self.dayMin.bind("<Return>", lambda event: self.dateBind(event, self.monthMin))
+        self.monthMin.bind("<Return>", lambda event: self.dateBind(event, self.yearMin))
+        self.yearMin.bind("<Return>", lambda event: self.dateBind(event, self.dayMax))
+        
+        self.dayMax.bind("<Return>", lambda event: self.dateBind(event, self.yearMax))
         self.yearMax.bind("<Return>", lambda event: self.dateBind(event, self.monthMax))
-        self.monthMax.bind("<Return>", lambda event: self.dateBind(event, self.dayMax))
-        self.dayMax.bind("<Return>", lambda event: self.dateBind(event, self.yearMin))
+        self.monthMax.bind("<Return>", lambda event: self.dateBind(event, self.dayMin))
 
         #packing the date widgets within a grid
-        self.labelFrom.grid(column=0, row=0)
-        self.yearMin.grid(column=1, row=0)
-        self.monthMin.grid(column=2, row=0)
-        self.dayMin.grid(column=3, row=0)
-        self.labelTo.grid(column=0, row=1)
-        self.yearMax.grid(column=1, row=1)
-        self.monthMax.grid(column=2, row=1)
-        self.dayMax.grid(column=3, row=1)
+        self.dia.grid(column=1, row=0)
+        self.mes.grid(column=2, row=0)
+        self.anho.grid(column=3, row=0)
+
+        self.labelFrom.grid(column=0, row=1)
+
+        self.dayMin.grid(column=1, row=1)
+        self.monthMin.grid(column=2, row=1)
+        self.yearMin.grid(column=3, row=1)
+    
+        self.labelTo.grid(column=0, row=2)
+
+        self.dayMax.grid(column=1, row=2)
+        self.monthMax.grid(column=2, row=2)
+        self.yearMax.grid(column=3, row=2)
 
         #we focus on the first entry
-        self.yearMin.focus_set()
+        self.dayMin.focus_set()
 
         #date Variables
         self.dateFrom: datetime.datetime = datetime.datetime(1,1,1)
@@ -450,22 +590,32 @@ class ExportMenu:
         #button for exporting
         self.exportButton = Button(self.subFrameLeft, 
                                    command= lambda: ExportWindow(self), 
-                                   text="Exportar seleccionados", 
-                                   font=("Arial", 14))
-        self.exportButton.grid(column=1, row=2, columnspan=3)
+                                   text="Exportar seleccionados <Ctrl+e>", 
+                                   font=("Arial", 14),
+                                   background=celadon,
+                                   activebackground=mint_green,
+                                   activeforeground=black)
+        self.parentApp.root.bind("<Control-e>", lambda event: ExportWindow(self))
+        self.exportButton.grid(column=1, row=3, columnspan=3)
 
         #button for returning
         self.cancelButton = Button(self.subFrameLeft, 
                                    command=self.cancelCommand, 
-                                   text="Volver", 
-                                   font=("Arial", 14))
-        self.cancelButton.grid(column=2, row=3)
+                                   text="Volver <Esc>", 
+                                   font=("Arial", 14),
+                                   background=celadon)
+        self.parentApp.root.bind("<Escape>", self.cancelCommand)
+        self.cancelButton.grid(column=2, row=4)
 
 
     #function for cancelButton for going back to the menu
     def cancelCommand(self, dummyParameterForEntryBind=None):
         self.parentApp.root.unbind_all("<Return>")
+        self.parentApp.root.unbind("<Escape>")
+        self.parentApp.root.unbind("<Control-e>")
         self.parentApp.terminal.addLine("Ha seleccionado volver al menú principal")
+        for widget in self.parent.winfo_children():
+            widget.destroy()
         MainMenu(self.parentApp)
 
     #checks for the validity of the input dates, returns false if:
@@ -501,6 +651,8 @@ class ExportMenu:
                 self.dateFrom = datetime.datetime(minyear, minmonth, minday)
             except ValueError:
                 self.dateFrom = datetime.datetime(1,1,1)
+        else: 
+            self.dateFrom = datetime.datetime(1,1,1)
 
         if not None in (maxyear, maxmonth, maxday):
             #self.parentApp.terminal.addLine("Porfavor ingrese un valor válido para la fecha")
@@ -508,6 +660,8 @@ class ExportMenu:
                 self.dateTo = datetime.datetime(maxyear, maxmonth, maxday)
             except ValueError:
                 self.dateTo = datetime.datetime.now()
+        else:
+            self.dateTo = datetime.datetime.now()
 
         #updates the list with the valid entries
     
@@ -519,13 +673,18 @@ class ExportMenu:
             self.displayList.insert(END, data.exportList()[0])
 
     def dateBind(self, event, next: Entry):
+        acumulable = ""
         if not self.checkDateRange():
-            self.parentApp.terminal.addLine("La fecha actual no es válida")
+            acumulable += "La fecha actual no es válida en su totalidad\n"
 
         self.entryToVar()
+        acumulable += "Se ha elegido hasta ahora:\n"
+        acumulable += f"Desde: {self.dateFrom}\n"
+        acumulable += f"Hasta: {self.dateTo}\n"
         self.updateList()
         next.focus_set()
-        self.parentApp.terminal.addLine(f"El total de computadores seleccionados es {len(dataRangeDate(self.dateFrom, self.dateTo))}")
+        acumulable += f"El total de computadores seleccionados es {len(dataRangeDate(self.dateFrom, self.dateTo))}"
+        self.parentApp.terminal.addLine(acumulable)
 
 class ExportWindow:
     def __init__(self, exportMenu: ExportMenu):
@@ -536,14 +695,21 @@ class ExportWindow:
         self.popUp = Toplevel(self.parentApp.root)
         self.popUp.title("Exportando...")
         self.popUp.geometry("400x200")
+        self.frame = Frame(self.popUp, background=black)
+        self.frame.pack(fill=BOTH, expand=True)
 
-        self.label = Label(self.popUp, text=f'''Está exportando {len(dataRangeDate(self.parentMenu.dateFrom, self.parentMenu.dateTo))} elementos, escriba el nombre del archivo a guardar:''', font=("Arial", 14))
+        self.label = Label(self.frame, 
+                           text=f'''Está exportando {len(dataRangeDate(self.parentMenu.dateFrom, self.parentMenu.dateTo))} elementos, escriba el nombre del archivo a guardar:''', 
+                           font=("Arial", 14),
+                           background=black,
+                           foreground=mint_green)
         self.label.bind('<Configure>', lambda e: self.label.config(wraplength=self.label.winfo_width()))
         self.label.pack()
 
-        self.entry = Entry(self.popUp, font=("Arial", 14))
+        self.entry = Entry(self.frame, font=("Arial", 14))
         self.entry.bind("<Return>", lambda event: self.exportData(event, self.entry.get()))
         self.entry.pack()
+        self.entry.focus()
 
 
     def exportData(self, event=None, name = "inventario"):
@@ -566,4 +732,3 @@ class ExportWindow:
             self.popUp.destroy()
         else:
             self.parentApp.terminal.addLine("No se ha podido guardar el documento, el nombre no es aceptable")
-        
