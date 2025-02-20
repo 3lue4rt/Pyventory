@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 #The name of the file to work with. defaults to 'data.txt'
-filename = "data.txt"
+filename = "data.csv"
 
 #List of columns for the csv.
 header = ["Número PC", "Fecha", "Partida", "Placa", "Procesador", "RAM", "SSD", "Ubicación", "Monitor"]
