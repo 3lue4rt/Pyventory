@@ -1,3 +1,5 @@
+version = "1.0 Primal Pine, BlueArt 2025"
+
 try:
     from tkinter import *
 except ImportError:
@@ -13,21 +15,26 @@ from exportxls import *
 from csvHandling import *
 import datetime
 
+#colors
 black = "#1D1E18"
 reseda_green = "#6B8F71"
 celadon = "#AAD2BA"
 mint_green = "#D9FFF5"
 celados = "#B9F5D8"
 
-#creates a Button given a frame, name and function
+#creates a Button given a frame, name and function, it defaults to 
+#using the defined colors at the top of the script, it also automatically
+#packs the button and returns the Button() obj.
 def createButton(frame: Frame, name: str, func: types.FunctionType) -> Button:
-    button = Button(frame, 
-                    text=name, 
-                    font=("Arial", 14), 
-                    command= func,
-                    background=celadon,
-                    foreground="Black")
-    button.pack(fill="both")
+    button = Button(frame, #parent
+                    text=name, #text in the button
+                    font=("Arial", 14), #font for the text
+                    command= func, #function assigned to the button
+                    background=celadon, #background color (unpressed)
+                    foreground="Black", #text color (unpressed)
+                    activebackground=mint_green, #background color (pressed)
+                    activeforeground=black) #text color (pressed)
+    button.pack(fill="both") #places the button filling the space
     return button
 
 #Clears a Frame of all their widgets
@@ -35,7 +42,10 @@ def clear(frame: Frame):
     for widget in frame.winfo_children():
         widget.pack_forget()
 
-#App class for initializing the application
+#App class for initializing the application, it is passed around
+#the menu classes for access to the terminal and frames.
+# it ISN'T responsible for cleaning the frames after a menu
+# is done.
 class App:
     def __init__(self):
         #Creates the root
@@ -65,6 +75,8 @@ class App:
         if not isValid:
             self.terminal.addLine("El archivo no tiene el formato correcto... guarde los datos a mano y borre el archivo para restaurar")
 
+        self.root.bind("credits", lambda event: print(version))
+
     #imports data to the csv
     def csvImport(self, data: csvData):
         csvInsert(data)
@@ -74,6 +86,7 @@ class App:
     def csvSearch(self, trait: str, index: int) -> list[csvData]:
         return csvSearchBy(trait, index)
     
+    #deletes data from the data csv
     def csvDelete(self, data: csvData) -> int:
         return csvRemove(data)
     
@@ -134,32 +147,39 @@ class Terminal:
         self.text = "=> "
         self.update()
 
-#Main Menu class, requires a parent App to sit on, buttons for other menus
+#Main Menu class, requires a parent App to sit on, buttons for other menus,
+#menus are responsible for cleaning themselves up, that means unbinding the hotkeys
+#and cleaning the widgets from the frame So the next menu works without side-effects
 class MainMenu:
     def __init__(self, parentApp: App):
         self.parentApp = parentApp
         #Parent
         self.parent = parentApp.mainFrame
+        #clears leftovers
         clear(self.parent)
 
+        #button for insert menu
         self.insertButton = createButton(self.parent, "Ingresar Computador \n(i)", 
                                          lambda: self.menu_bind(0, InsertMenu))
-        self.parentApp.root.bind("i", lambda event: self.menu_bind(event, InsertMenu))
+        self.parentApp.root.bind("i", lambda event: self.menu_bind(event, InsertMenu)) #hotkey
         self.insertButton.config(height= 5)
         self.insertButton.pack(side=LEFT, fill=BOTH, expand=True)
 
+        #button for edit menu
         self.editButton = createButton(self.parent, "Buscar/Editar/Eliminar Computador \n(b)", 
                                        lambda : self.menu_bind(0, SearchMenu))
-        self.parentApp.root.bind("b", lambda event: self.menu_bind(event, SearchMenu))
+        self.parentApp.root.bind("b", lambda event: self.menu_bind(event, SearchMenu)) #hotkey
         self.editButton.config(height = 5)
         self.editButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
+        #button for export menu
         self.exportButton = createButton(self.parent, "Exportar/Vista Rápida \n(e)", 
                                          lambda : self.menu_bind(0, ExportMenu))
-        self.parentApp.root.bind("e", lambda event: self.menu_bind(event, ExportMenu))
+        self.parentApp.root.bind("e", lambda event: self.menu_bind(event, ExportMenu)) #hotkey
         self.exportButton.config(height = 5)
         self.exportButton.pack(side=RIGHT, fill=BOTH, expand=True)
 
+    #method for changing menu, it unbinds the hotkeys it assigned
     def menu_bind(self, event=None,Menu=None):
         self.parentApp.root.unbind("i")
         self.parentApp.root.unbind("b")
@@ -169,6 +189,8 @@ class MainMenu:
         Menu(self.parentApp)
 
 # Insert menu class, requires a parent App to sit on, adds new computer to csv
+#menus are responsible for cleaning themselves up, that means unbinding the hotkeys
+#and cleaning the widgets from the frame So the next menu works without side-effects
 class InsertMenu:
     def __init__(self, parentApp: App):
         self.parentApp = parentApp
@@ -212,10 +234,13 @@ class InsertMenu:
         self.listBox.bind("<Return>", self.select_trait)
         self.listBox.pack()
 
+        #cancelmenu
         self.cancelButton = createButton(self.parent, "Cancelar y Volver\n<Esc>", self.cancelCommand)
         self.parentApp.root.bind("<Escape>", self.cancelCommand)
         self.cancelButton.pack_configure(fill="none", expand=False)
 
+    #method for own arrowing from the entry so that it selects the first element 
+    #from the listbox
     def setListBoxFocus(self, event=None):
         self.listBox.focus()
         self.listBox.select_set(0)
@@ -232,6 +257,8 @@ class InsertMenu:
         self.parentApp.terminal.addLine("Ha seleccionado cancelar y volver al menú principal")
         MainMenu(self.parentApp)
 
+    #handles the building of the data, which will be inserted when the 
+    #promps end
     def make(self, dummyParameterForEntryBind=None):
         #Automatically enters actual date if nothing is entered
         if self.index==1 and self.entry.get()=="":
@@ -279,6 +306,7 @@ class InsertMenu:
                 widget.destroy()
             MainMenu(self.parentApp)
 
+    #handles selecting the trait from the listBox hotkey <Return>
     def select_trait(self, event = None):
         selected = self.listBox.get(self.listBox.curselection())  # Get the selected item
         self.entry.delete(0, END)
@@ -294,7 +322,10 @@ class InsertMenu:
             filtered = set(thing.exportList()[self.index] for thing in self.parentApp.csvSearch(self.entry.get(), self.index))
             for item in filtered:
                 self.listBox.insert(END, item)
-# Edit menu, requiers parent App to sit on, starts the search for a PC
+
+# Search menu, requires parent App to sit on, starts the search for a PC
+#menus are responsible for cleaning themselves up, that means unbinding the hotkeys
+#and cleaning the widgets from the frame So the next menu works without side-effects
 class SearchMenu:
     def __init__(self, parentApp: App):
         #parent Stuff
@@ -302,6 +333,7 @@ class SearchMenu:
         self.parent = parentApp.mainFrame
         clear(self.parent)
 
+        #subframing so the widgets can be better organized
         self.subFrameLeft = Frame(self.parent, background=black)
         self.subFrameLeft.pack(side=LEFT, fill= BOTH, expand=True)
         self.subFrameRight = Frame(self.parent, background=black)
@@ -401,6 +433,7 @@ class SearchMenu:
         self.entry.focus()
         self.listbox.place_forget()  # Hide the dropdown after selection
 
+    #cleans the frame and unbinds to access the edit menu
     def edit_item(self, dummyParameterForEntryBind=None):
         if self.selected == None:
             self.parentApp.terminal.addLine("Porfavor seleccione un PC válido")
@@ -431,57 +464,85 @@ class SearchMenu:
         #quantity = self.parentApp.csvDelete(self.selected)
         #self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
 
+#popup window for deleting
 class DeletePopUp:
     def __init__(self, parentApp:App, selected: csvData):
+        #parent stuff
         self.parentApp = parentApp
+
+        #selected data to delete
         self.selected = selected
+
+        #creates the popup
         self.popUp = Toplevel(self.parentApp.root)
 
+        #frame in the popup
         self.parent = Frame(self.popUp, background=black)
+
+        #label 1
         self.label = Label(self.parent, 
                            text=f"¿Está seguro que quiere eliminar el computador: {self.selected.numero_pc}?",
                            background=black,
                            foreground=mint_green,
                            font=("Arial", 16))
+        
+        #label 2
         self.options = Label(self.parent,
                              text= "Escriba eliminar para confirmar\nPresione <Esc> para abortar",
                              background=black,
                              foreground=mint_green,
                              font=("Arial", 16))
+        #packing stuff
         self.parent.pack(fill=BOTH, expand=True)
         self.label.pack()
         self.options.pack()
+
+        #bind the hotkeys
         self.popUp.bind("eliminar", self.handleDelete)
         self.popUp.bind("<Escape>", self.handleEscape)
+
+        #automatic focus on the window
         self.popUp.focus()
         
+    #handles if user chooses delete, cleans up the popup
     def handleDelete(self, event=None):
         quantity = self.parentApp.csvDelete(self.selected)
         self.parentApp.terminal.addLine(f"Se han eliminado {quantity} PCs con el número {self.selected.numero_pc}")
         self.popUp.destroy()
 
+    #handles if users cancels, cleans the popup
     def handleEscape(self, event=None):
         self.parentApp.terminal.addLine("Proceso abortado")
         self.popUp.destroy()
 
+# Edit menu, requires parent App to sit on, given a selected data it edits it
+#menus are responsible for cleaning themselves up, that means unbinding the hotkeys
+#and cleaning the widgets from the frame So the next menu works without side-effects
 class EditMenu:
     def __init__(self, parentApp: App, selected_data: csvData):
+        #parent stuff
         self.parentApp = parentApp
         self.selected = selected_data
 
+        #selected trait to edit
         self.selectedTrait: str | None = None
 
+        #more parent stuff
         self.parent = self.parentApp.mainFrame
         clear(self.parent)
+
+        #subframing for organizing
         self.subFrameLeft = Frame(self.parent, background=black)
         self.subFrameLeft.pack(fill=BOTH, expand=True, side=LEFT)
         self.subFrameRight = Frame(self.parent, background=black)
         self.subFrameRight.pack(fill=BOTH, expand=True, side=RIGHT)
 
+        #list for organizing the traits of the selected data
         self.validTraits = header.copy()
         self.validTraits.pop(0)
         self.validTraits = list(trait+f": {self.selected.exportList()[self.validTraits.index(trait) + 1]}" for trait in self.validTraits)
 
+        #Listbox containing the old traits
         self.listbox = Listbox(self.subFrameLeft, width=30, height=5,font=("Arial", 16))
         for trait in self.validTraits:
             self.listbox.insert(END, trait)
@@ -491,15 +552,19 @@ class EditMenu:
         self.listbox.bind("<Return>", self.select_trait)
         self.listbox.pack()
 
+        #entry for editing
         self.entry = Entry(self.subFrameLeft, width=30, font=("Arial", 16))
         self.entry.pack()
         self.entry.bind("<Return>", self.entryCommand)
 
+        #cancel button
         self.cancelButton = createButton(self.subFrameRight, "Cancelar y volver\n<Esc>", self.cancelCommand)
         self.parentApp.root.bind("<Escape>", self.cancelCommand)
         self.cancelButton.pack(fill=BOTH, expand=TRUE)
 
-    #asdfasdfasdf
+    #handles non selected traits and no entry, if conditions are met
+    #it edits the selected trait by the entry promp and
+    #returns to the search menu cleaning after themselves
     def entryCommand(self, dummyParameterForEntryBind=None):
         if self.entry.get() == "":
             self.parentApp.terminal.addLine("Porfavor ingrese algo para editar")
@@ -515,7 +580,7 @@ class EditMenu:
         SearchMenu(self.parentApp)
 
 
-    #asdfasdf
+    #<Return> binding for listbox
     def select_trait(self, dummyParameterForEntryBind=None):
         self.selectedTrait = self.listbox.get(self.listbox.curselection())
         self.parentApp.terminal.addLine(f"Ha seleccionado editar {self.selectedTrait}")
@@ -530,6 +595,9 @@ class EditMenu:
             widget.destroy()
         SearchMenu(self.parentApp)
 
+
+    #changes the trait (object atribute) of self.selected (Data) 
+    #by trait (parameter) and index (parameter) indicates which one
     def editSelected(self, trait: str, index: int):
         oldTrait = self.selected.exportList()[index]
         result = csvEditTrait(self.selected, trait, index)
@@ -571,13 +639,14 @@ class ExportMenu:
         self.mes = Label(self.subFrameLeft, text="Mes:", font=("Arial", 14),background=black, foreground=mint_green)
         self.anho = Label(self.subFrameLeft, text="Año:", font=("Arial", 14),background=black, foreground=mint_green)
 
+        #easy hotkeys
         self.dayMin.bind("<Return>", lambda event: self.dateBind(event, self.monthMin))
         self.monthMin.bind("<Return>", lambda event: self.dateBind(event, self.yearMin))
         self.yearMin.bind("<Return>", lambda event: self.dateBind(event, self.dayMax))
         
-        self.dayMax.bind("<Return>", lambda event: self.dateBind(event, self.yearMax))
-        self.yearMax.bind("<Return>", lambda event: self.dateBind(event, self.monthMax))
-        self.monthMax.bind("<Return>", lambda event: self.dateBind(event, self.dayMin))
+        self.dayMax.bind("<Return>", lambda event: self.dateBind(event, self.monthMax))
+        self.monthMax.bind("<Return>", lambda event: self.dateBind(event, self.yearMax))
+        self.yearMax.bind("<Return>", lambda event: self.dateBind(event, self.dayMin))
 
         #packing the date widgets within a grid
         self.dia.grid(column=1, row=0)
@@ -707,12 +776,15 @@ class ExportMenu:
         acumulable += f"El total de computadores seleccionados es {len(dataRangeDate(self.dateFrom, self.dateTo))}"
         self.parentApp.terminal.addLine(acumulable)
 
+#export menu popup for saving the document, needs the export menu as a parameter for easy access to dates
 class ExportWindow:
     def __init__(self, exportMenu: ExportMenu):
+        #parent stuff
         self.parentMenu = exportMenu
         self.parentApp = self.parentMenu.parentApp
         self.parent = self.parentApp.mainFrame
 
+        #popup
         self.popUp = Toplevel(self.parentApp.root)
         self.popUp.title("Exportando...")
         self.popUp.geometry("400x200")
@@ -732,7 +804,8 @@ class ExportWindow:
         self.entry.pack()
         self.entry.focus()
 
-
+    #handles the good naming of the document (WINDOWS REGEX) and saves it wih the
+    #user given name
     def exportData(self, event=None, name = "inventario"):
         result = dataRangeDate(self.parentMenu.dateFrom, self.parentMenu.dateTo)
         book = Workbook()
